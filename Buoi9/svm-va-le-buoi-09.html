@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Buổi 09 — SVM và lề</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Serif:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  :root{
+    --bg:#F5F5F1;
+    --bg-raise:#FFFFFF;
+    --ink:#1B1E24;
+    --muted:#5B6270;
+    --navy:#1F3A5F;
+    --navy-soft:#E4EAF1;
+    --teal:#0E7C7B;
+    --teal-soft:#E1F1EF;
+    --amber:#B0791E;
+    --amber-soft:#F6ECD9;
+    --border:#D9D6CC;
+    --code-bg:#161A20;
+    --code-ink:#E7E9EC;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark){
+      --bg:#14161B;
+      --bg-raise:#1B1E25;
+      --ink:#EAEAE6;
+      --muted:#9AA1AD;
+      --navy:#7FA5D6;
+      --navy-soft:#1E2A3B;
+      --teal:#5FC9C4;
+      --teal-soft:#152A29;
+      --amber:#E0AE5E;
+      --amber-soft:#2B2214;
+      --border:#33363E;
+      --code-bg:#0C0E12;
+      --code-ink:#E7E9EC;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#14161B;
+    --bg-raise:#1B1E25;
+    --ink:#EAEAE6;
+    --muted:#9AA1AD;
+    --navy:#7FA5D6;
+    --navy-soft:#1E2A3B;
+    --teal:#5FC9C4;
+    --teal-soft:#152A29;
+    --amber:#E0AE5E;
+    --amber-soft:#2B2214;
+    --border:#33363E;
+    --code-bg:#0C0E12;
+    --code-ink:#E7E9EC;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Serif', Georgia, 'Times New Roman', serif;
+    line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    max-width:760px;
+    margin:0 auto;
+    padding:48px 22px 120px;
+  }
+  h1,h2,h3,.sans{
+    font-family:'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+  }
+  header.masthead{
+    border-bottom:2px solid var(--ink);
+    padding-bottom:22px;
+    margin-bottom:36px;
+  }
+  .kicker{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13.5px;
+    color:var(--muted);
+    letter-spacing:0.01em;
+    margin-bottom:10px;
+  }
+  h1.title{
+    font-size:clamp(28px,5vw,40px);
+    line-height:1.15;
+    margin:0 0 12px;
+    font-weight:600;
+  }
+  .meta-line{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+    color:var(--muted);
+  }
+  .meta-line b{color:var(--ink); font-weight:600;}
+
+  nav.toc{
+    background:var(--bg-raise);
+    border:1px solid var(--border);
+    border-radius:4px;
+    padding:16px 20px;
+    margin:0 0 40px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+  }
+  nav.toc .toc-title{font-weight:600; margin-bottom:8px; color:var(--muted); font-size:13px;}
+  nav.toc ol{margin:0; padding-left:20px; columns:2; column-gap:24px;}
+  nav.toc li{margin-bottom:5px; break-inside:avoid;}
+  nav.toc a{color:var(--navy); text-decoration:none;}
+  nav.toc a:hover{text-decoration:underline;}
+
+  h2.section{
+    font-size:24px;
+    font-weight:600;
+    margin:56px 0 20px;
+    padding-bottom:8px;
+    border-bottom:1px solid var(--border);
+  }
+  h3.subsection{
+    font-size:19px;
+    font-weight:600;
+    margin:36px 0 16px;
+    color:var(--navy);
+  }
+
+  blockquote.original{
+    margin:0 0 22px;
+    padding:14px 20px 14px 22px;
+    border-left:4px solid var(--navy);
+    background:var(--navy-soft);
+    border-radius:0 4px 4px 0;
+    font-size:16.5px;
+  }
+  blockquote.original p{margin:0 0 12px;}
+  blockquote.original p:last-child{margin-bottom:0;}
+  blockquote.original .tag{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:12px;
+    text-transform:none;
+    color:var(--navy);
+    font-weight:600;
+    display:block;
+    margin-bottom:8px;
+    opacity:0.85;
+  }
+
+  .insight{
+    margin:0 0 34px;
+    padding:16px 20px;
+    background:var(--teal-soft);
+    border:1px solid color-mix(in srgb, var(--teal) 35%, transparent);
+    border-radius:4px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:15.5px;
+    line-height:1.65;
+  }
+  .insight .head{
+    font-weight:700;
+    color:var(--teal);
+    margin-bottom:10px;
+    font-size:15px;
+  }
+  .insight p{margin:0 0 10px;}
+  .insight p:last-child{margin-bottom:0;}
+  .insight ul,.insight ol{margin:8px 0 10px; padding-left:22px;}
+  .insight li{margin-bottom:6px;}
+  .insight strong{color:var(--ink);}
+
+  .callout{
+    margin:0 0 30px;
+    padding:16px 20px;
+    background:var(--amber-soft);
+    border-left:4px solid var(--amber);
+    border-radius:0 4px 4px 0;
+  }
+  .callout .callout-label{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:700;
+    font-size:13.5px;
+    color:var(--amber);
+    margin-bottom:8px;
+    display:block;
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    margin:0 0 22px;
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:14.5px;
+    background:var(--bg-raise);
+  }
+  table caption{
+    text-align:left;
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:6px;
+    caption-side:top;
+  }
+  th,td{
+    border:1px solid var(--border);
+    padding:8px 10px;
+    text-align:left;
+  }
+  th{
+    background:var(--navy-soft);
+    font-weight:600;
+  }
+  td.num, th.num{text-align:right; font-family:'IBM Plex Mono', monospace; font-size:13.5px;}
+  tr.highlight td{background:var(--amber-soft);}
+
+  .table-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch;}
+
+  pre{
+    background:var(--code-bg);
+    color:var(--code-ink);
+    padding:16px 18px;
+    border-radius:6px;
+    overflow-x:auto;
+    font-family:'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+    font-size:13.5px;
+    line-height:1.55;
+    margin:0 0 22px;
+  }
+  code{font-family:'IBM Plex Mono', monospace;}
+  :not(pre) > code{
+    background:var(--navy-soft);
+    padding:1px 5px;
+    border-radius:3px;
+    font-size:0.9em;
+  }
+
+  figure{
+    margin:0 0 30px;
+    padding:14px;
+    background:var(--bg-raise);
+    border:1px solid var(--border);
+    border-radius:6px;
+  }
+  figure svg{width:100%; height:auto; display:block;}
+  figcaption{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13px;
+    color:var(--muted);
+    margin-top:10px;
+    text-align:center;
+  }
+
+  .exercise{
+    border:1px solid var(--border);
+    border-radius:6px;
+    margin:0 0 26px;
+    overflow:hidden;
+    background:var(--bg-raise);
+  }
+  .exercise-head{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-weight:600;
+    padding:12px 18px;
+    background:var(--navy-soft);
+    border-bottom:1px solid var(--border);
+  }
+  .exercise-body{padding:16px 18px 4px;}
+  .gate{
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--amber);
+    margin:14px 0 4px;
+  }
+
+  hr.div{border:none; border-top:1px dashed var(--border); margin:30px 0;}
+
+  .katex-display{margin:12px 0;}
+
+  footer.end{
+    margin-top:60px;
+    padding-top:20px;
+    border-top:2px solid var(--ink);
+    font-family:'IBM Plex Sans', sans-serif;
+    font-size:13.5px;
+    color:var(--muted);
+  }
+
+  @media (max-width:520px){
+    nav.toc ol{columns:1;}
+    .wrap{padding:32px 16px 100px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="kicker">Luyện Olympic Trí tuệ nhân tạo · Học máy cổ điển · Phục vụ sơ loại</div>
+    <h1 class="title">Buổi 09 — SVM và lề</h1>
+    <div class="meta-line">Ngày <b>25/8/2026</b> · Giảng viên <b>TS. Đỗ Phúc Hảo</b> · Bản mở rộng &amp; trực quan hoá</div>
+  </header>
+
+  <nav class="toc">
+    <div class="toc-title">MỤC LỤC</div>
+    <ol>
+      <li><a href="#muc-tieu">Mục tiêu buổi học</a></li>
+      <li><a href="#s21">2.1 Siêu phẳng và ba con số</a></li>
+      <li><a href="#s22">2.2 Vì sao lề rộng</a></li>
+      <li><a href="#s23">2.3 Ví dụ tám điểm</a></li>
+      <li><a href="#s24">2.4 Lề mềm và tham số C</a></li>
+      <li><a href="#s25">2.5 Kernel</a></li>
+      <li><a href="#s3">3. Bài tập mẫu</a></li>
+      <li><a href="#s4">4. Bài tập tự làm</a></li>
+      <li><a href="#s5">Chuẩn bị cho buổi sau</a></li>
+    </ol>
+  </nav>
+
+  <section id="muc-tieu">
+    <h2 class="section">1. Mục tiêu</h2>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Tính tay được dấu của $w \cdot x + b$, nói được vector hỗ trợ là gì, và trả lời được câu hỏi buổi 08 để lại: vì sao lề rộng lại tổng quát tốt hơn, trong khi cả hai đường thẳng đều chia đúng toàn bộ dữ liệu huấn luyện?</p>
+      <p>Phần tính tay không phải để cho đẹp. Đề sơ loại 2025 có câu cho sẵn $w$, $b$ và một điểm, hỏi điểm ấy thuộc lớp nào, và bạn không có máy tính trong phòng thi.</p>
+    </blockquote>
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Buổi này chỉ xoay quanh một đường thẳng (hoặc một mặt phẳng, tổng quát hơn là một <strong>siêu phẳng</strong>) chia không gian làm hai nửa. Mọi thứ khác — vector hỗ trợ, lề, lề mềm, kernel — đều là những cách trả lời cho một câu hỏi duy nhất: <em>trong vô số đường có thể chia đúng dữ liệu, nên chọn đường nào?</em></p>
+      <p>Hãy hình dung bạn đang kẻ một hàng rào giữa hai đàn cừu trên một cánh đồng. Có rất nhiều cách kẻ hàng rào mà không con cừu nào lạc sang bên kia. Nhưng nếu hàng rào áp sát một con cừu đang đứng gần biên, chỉ cần con đó nhích một bước là nó "đổi phe". Một hàng rào nằm ở giữa khoảng trống rộng nhất giữa hai đàn thì chịu được nhiều xê dịch hơn. Đó chính là trực giác về <strong>lề</strong> (margin) sẽ được hình thức hoá ở mục 2.2.</p>
+      <p>Vì sao buổi này nhấn mạnh "tính tay, không máy tính"? Vì trong phòng thi, câu hỏi dạng "cho $w$, $b$ và một điểm, hỏi lớp nào" chỉ cần bạn thay số vào một biểu thức tuyến tính rồi xem dấu — nhưng nếu không luyện phản xạ, học sinh dễ nhầm giữa ba đại lượng rất giống nhau về hình thức: dấu, khoảng cách, và bề rộng lề. Ba đại lượng này được hệ thống hoá ngay ở mục 2.1.</p>
+    </div>
+  </section>
+
+  <section id="s21">
+    <h2 class="section">2. Tóm tắt kiến thức</h2>
+    <h3 class="subsection">2.1 Siêu phẳng, và ba con số phải thuộc</h3>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Một mô hình tuyến tính chia không gian bằng mặt $w \cdot x + b = 0$. Ba đại lượng, học một lần dùng cả đời:</p>
+    </blockquote>
+
+    <div class="table-scroll">
+    <table>
+      <caption>Ba đại lượng phải phân biệt được ngay lập tức</caption>
+      <thead><tr><th>Đại lượng</th><th>Công thức</th><th>Đọc là</th></tr></thead>
+      <tbody>
+        <tr><td>dấu</td><td>$\operatorname{sign}(w \cdot x + b)$</td><td>điểm nằm phía nào</td></tr>
+        <tr><td>khoảng cách</td><td>$\dfrac{|w \cdot x + b|}{\lVert w \rVert}$</td><td>xa mặt phân chia bao nhiêu</td></tr>
+        <tr><td>bề rộng lề</td><td>$\dfrac{2}{\lVert w \rVert}$</td><td>khoảng trống giữa hai lớp</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Chú ý một điều mà đề thi hay hỏi xoáy: $|w \cdot x + b|$ không phải khoảng cách. Nó chỉ tỉ lệ với khoảng cách. Nhân cả $w$ lẫn $b$ với 10 thì mặt phân chia không nhúc nhích, mọi giá trị $w \cdot x + b$ tăng mười lần, còn khoảng cách thật thì giữ nguyên vì $\lVert w \rVert$ cũng tăng mười lần.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p><strong>Vì sao lại có ba đại lượng, và vì sao chúng dễ lẫn?</strong> Cả ba đều được tính từ cùng một biểu thức $f(x) = w \cdot x + b$, chỉ khác ở việc có "chuẩn hoá" theo $\lVert w \rVert$ hay không:</p>
+      <ul>
+        <li><strong>Dấu</strong> chỉ hỏi $f(x)$ dương hay âm — đây là câu trả lời "thô", không quan tâm độ lớn.</li>
+        <li><strong>Khoảng cách</strong> chia $|f(x)|$ cho $\lVert w \rVert$ để loại bỏ ảnh hưởng của việc "phóng to" $w$. Đây là con số có ý nghĩa hình học thật sự — đơn vị là đơn vị của không gian dữ liệu (mét, điểm ảnh, v.v.).</li>
+        <li><strong>Bề rộng lề</strong> là khoảng cách từ mặt phân chia đến điểm gần nhất của mỗi lớp, nhân đôi (vì tính cho cả hai phía). Nó chỉ có ý nghĩa <em>sau khi</em> đã chuẩn hoá sao cho điểm gần nhất có $|f(x)| = 1$ — đây chính là quy ước sẽ dùng xuyên suốt buổi học (xem mục 2.3).</li>
+      </ul>
+      <p><strong>Vì sao $|w \cdot x + b|$ không phải là khoảng cách?</strong> Hãy tưởng tượng bạn đo độ cao của một ngọn đồi bằng thước có vạch chia không đều — nếu ai đó "kéo giãn" cái thước ra gấp đôi mà không nói cho bạn biết, con số bạn đọc được cũng tăng gấp đôi dù ngọn đồi không hề cao thêm. $\lVert w \rVert$ chính là "độ giãn" của cái thước $w \cdot x + b$. Muốn có con số thật (mét thật), phải chia cho độ giãn ấy — đó là phép chia cho $\lVert w \rVert$.</p>
+      <p>Chứng minh nhanh bằng đại số: gọi $x_0$ là hình chiếu vuông góc của $x$ lên mặt $w \cdot x + b = 0$. Khi đó $x = x_0 + d \cdot \dfrac{w}{\lVert w \rVert}$ với $d$ là khoảng cách có dấu. Thay vào:</p>
+      <p>$$w \cdot x + b = w \cdot x_0 + b + d \cdot \frac{w \cdot w}{\lVert w \rVert} = 0 + d \cdot \lVert w \rVert$$</p>
+      <p>vì $w \cdot x_0 + b = 0$ ($x_0$ nằm trên mặt phân chia) và $w \cdot w = \lVert w \rVert^2$. Suy ra $d = \dfrac{w \cdot x + b}{\lVert w \rVert}$, và khoảng cách (luôn dương) là trị tuyệt đối của nó. Đây chính là công thức ở bảng trên — không phải một quy ước tuỳ tiện, mà là kết quả của một phép chiếu hình học.</p>
+      <p><strong>Mẹo thi:</strong> khi đề cho $w, b$ rồi hỏi "điểm này gần mặt phân chia hơn điểm kia bao nhiêu lần", đừng so trực tiếp $|w\cdot x+b|$ của hai điểm nếu $w$ chưa cố định — nhưng trong hầu hết đề thi, $w$ là cố định cho cả câu, nên tỉ lệ $|f(x_1)| : |f(x_2)|$ vẫn đúng bằng tỉ lệ khoảng cách, vì $\lVert w \rVert$ là mẫu số chung. Cái không được phép làm là so sánh $|f(x)|$ giữa <em>hai mô hình khác nhau</em> (hai cặp $w,b$ khác nhau) như thể chúng là khoảng cách — đó chính là cái bẫy "đề thi hay hỏi xoáy".</p>
+    </div>
+
+    <figure>
+      <svg viewBox="0 0 520 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ siêu phẳng, lề và khoảng cách">
+        <rect x="0" y="10" width="200" height="230" style="fill:var(--navy-soft)" opacity="0.6"/>
+        <rect x="320" y="10" width="200" height="230" style="fill:var(--teal-soft)" opacity="0.6"/>
+        <line x1="200" y1="10" x2="200" y2="240" style="stroke:var(--muted); stroke-dasharray:5,5; stroke-width:1.5"/>
+        <line x1="320" y1="10" x2="320" y2="240" style="stroke:var(--muted); stroke-dasharray:5,5; stroke-width:1.5"/>
+        <line x1="260" y1="10" x2="260" y2="240" style="stroke:var(--ink); stroke-width:2.5"/>
+        <text x="260" y="4" text-anchor="middle" font-family="IBM Plex Sans" font-size="12" style="fill:var(--ink)">H: w·x + b = 0</text>
+        <line x1="260" y1="185" x2="318" y2="185" style="stroke:var(--navy); stroke-width:2" marker-end="url(#arrow)"/>
+        <text x="289" y="176" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" font-weight="600" style="fill:var(--navy)">w</text>
+        <circle cx="400" cy="70" r="6" style="fill:var(--teal)"/>
+        <text x="412" y="65" font-family="IBM Plex Sans" font-size="12" style="fill:var(--teal)">x</text>
+        <line x1="400" y1="70" x2="260" y2="70" style="stroke:var(--ink); stroke-dasharray:3,3; stroke-width:1.3"/>
+        <text x="330" y="62" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" style="fill:var(--ink)">d</text>
+        <line x1="200" y1="262" x2="320" y2="262" style="stroke:var(--amber); stroke-width:1.6" marker-end="url(arrowamber)" marker-start="url(arrowamber2)"/>
+        <text x="260" y="282" text-anchor="middle" font-family="IBM Plex Sans" font-size="12.5" style="fill:var(--amber)">lề = 2 / ‖w‖</text>
+        <text x="470" y="30" text-anchor="middle" font-family="IBM Plex Sans" font-size="14" font-weight="700" style="fill:var(--teal)">+1</text>
+        <text x="50" y="30" text-anchor="middle" font-family="IBM Plex Sans" font-size="14" font-weight="700" style="fill:var(--navy)">−1</text>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" style="fill:var(--navy)"/></marker>
+          <marker id="arrowamber" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" style="fill:var(--amber)"/></marker>
+          <marker id="arrowamber2" markerWidth="8" markerHeight="8" refX="2" refY="3" orient="auto-start-reverse"><path d="M0,0 L6,3 L0,6 Z" style="fill:var(--amber)"/></marker>
+        </defs>
+      </svg>
+      <figcaption>Siêu phẳng H chia mặt phẳng làm hai nửa. w là vector pháp tuyến (vuông góc với H). d là khoảng cách từ điểm x đến H. Vùng giữa hai đường đứt nét là lề — khoảng trống không có dữ liệu nào được phép nằm trong (với lề cứng).</figcaption>
+    </figure>
+  </section>
+
+  <section id="s22">
+    <h3 class="subsection">2.2 Vì sao lề rộng</h3>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Nếu hai lớp tách được thì có vô hạn đường thẳng chia đúng chúng. SVM chọn đường có lề rộng nhất, tức là đường ở xa cả hai lớp nhất có thể.</p>
+      <p>Lý do không phải thẩm mỹ. Dữ liệu kiểm tra là dữ liệu huấn luyện cộng một chút xê dịch. Đường sát rạt vào một điểm huấn luyện sẽ đổi phía ngay khi điểm ấy xê dịch một chút; đường cách cả hai lớp một khoảng $\gamma$ thì chịu được mọi xê dịch nhỏ hơn $\gamma$. Lề chính là lượng nhiễu mà nghiệm chịu được trước khi sai.</p>
+      <p>Bài toán viết ra là: cực tiểu $\dfrac{1}{2}\lVert w \rVert^2$ với ràng buộc $y_i(w \cdot x_i + b) \geq 1$ cho mọi $i$. Cực tiểu $\lVert w \rVert$ chính là cực đại $2/\lVert w \rVert$.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Đây chính là câu trả lời cho "câu hỏi buổi 08 để lại" đã nêu ở mục tiêu. Hai đường thẳng cùng chia đúng 100% dữ liệu huấn luyện không có nghĩa là chúng tốt như nhau trên dữ liệu mới — vì dữ liệu mới không giống hệt dữ liệu huấn luyện, nó chỉ <em>gần giống</em>. "Gần giống" ở đây được mô hình hoá đơn giản là "huấn luyện cộng một chút nhiễu ngẫu nhiên".</p>
+      <p>Phép ẩn dụ dễ nhớ: nghĩ tới một chiếc ô tô đỗ trong khoảng trống giữa hai chiếc xe khác. Nếu bạn đỗ sát rạt một bên (chạm gần vào gương xe hàng xóm), chỉ cần gió thổi nhẹ hoặc bạn đỗ lệch 5cm là đã va quẹt. Nếu bạn đỗ đúng giữa khoảng trống, bạn có "vùng đệm an toàn" ở cả hai phía — sai số nhỏ không gây hậu quả. Lề chính là vùng đệm an toàn đó, và SVM là thuật toán "đỗ xe cẩn thận nhất có thể".</p>
+      <p><strong>Vì sao viết được thành bài toán tối ưu?</strong> Với một siêu phẳng cố định hướng ($w/\lVert w\rVert$ cố định), nếu ta quy ước điểm gần nhất mỗi lớp thoả $y_i(w\cdot x_i+b)=1$ (đây là một lựa chọn tỉ lệ, không mất tổng quát — xem lại: nhân $w,b$ với hằng số không đổi mặt phân chia), thì theo công thức khoảng cách ở mục 2.1, khoảng cách từ điểm gần nhất đến mặt là $1/\lVert w\rVert$, và lề (hai phía) là $2/\lVert w\rVert$. Muốn lề <em>lớn nhất</em> tức là muốn $\lVert w\rVert$ <em>nhỏ nhất</em>. Người ta tối ưu $\frac12\lVert w\rVert^2$ thay vì $\lVert w\rVert$ trực tiếp chỉ vì lý do kỹ thuật: bình phương khiến hàm khả vi mượt và bài toán trở thành <em>quy hoạch toàn phương lồi</em> (convex quadratic programming) — một dạng bài toán có lời giải duy nhất và các thuật toán giải rất hiệu quả đã có sẵn.</p>
+      <p><strong>Đọc ràng buộc $y_i(w\cdot x_i+b)\ge 1$:</strong> nếu $y_i=+1$ thì ràng buộc là $w\cdot x_i+b \ge 1$ (điểm dương phải nằm ở phía dương, cách mặt phân chia ít nhất $1/\lVert w\rVert$). Nếu $y_i=-1$ thì ràng buộc trở thành $w\cdot x_i+b \le -1$ sau khi nhân hai vế với $-1$. Nhân với $y_i$ là một mẹo viết gọn hai trường hợp thành một bất phương trình duy nhất — mẹo này sẽ xuất hiện lại ở lề mềm (2.4).</p>
+      <p>Liên hệ rộng hơn: đây chính là một dạng cụ thể của nguyên lý "regularization" mà nhiều mô hình khác cũng dùng (hồi quy Ridge, Lasso...) — phạt độ lớn của trọng số để tránh mô hình "bám sát" dữ liệu huấn luyện một cách mong manh. SVM là trường hợp mà phần thưởng của việc phạt $\lVert w\rVert$ có một ý nghĩa hình học tường minh: lề rộng hơn.</p>
+    </div>
+  </section>
+
+  <section id="s23">
+    <h3 class="subsection">2.3 Một ví dụ tám điểm, giải bằng mắt</h3>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Lớp +1: $(3,1), (3,-1), (6,1), (6,-1)$. Lớp −1: $(1,0), (0,1), (0,-1), (-1,0)$.</p>
+      <p>Nhìn là thấy: hai lớp cách nhau theo trục hoành, lớp âm dừng ở $x_1=1$ và lớp dương bắt đầu ở $x_1=3$. Đường ở giữa là $x_1=2$. Viết theo dạng chuẩn thì $w=(1,0)$ và $b=-2$, vì khi ấy điểm gần nhất của mỗi lớp cho đúng $y(w\cdot x+b)=1$.</p>
+    </blockquote>
+
+    <figure>
+      <svg viewBox="0 0 620 320" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sơ đồ ví dụ tám điểm với siêu phẳng x1=2">
+        <line x1="50" y1="160" x2="590" y2="160" style="stroke:var(--border); stroke-width:1.3"/>
+        <line x1="170" y1="40" x2="170" y2="280" style="stroke:var(--border); stroke-width:1.3"/>
+        <line x1="230" y1="40" x2="230" y2="280" style="stroke:var(--muted); stroke-dasharray:5,5; stroke-width:1.4"/>
+        <line x1="350" y1="40" x2="350" y2="280" style="stroke:var(--muted); stroke-dasharray:5,5; stroke-width:1.4"/>
+        <line x1="290" y1="40" x2="290" y2="280" style="stroke:var(--ink); stroke-width:2.5"/>
+        <text x="290" y="30" text-anchor="middle" font-family="IBM Plex Sans" font-size="13" font-weight="600" style="fill:var(--ink)">x₁ = 2</text>
+
+        <circle cx="350" cy="100" r="7" style="fill:var(--teal)"/>
+        <circle cx="350" cy="220" r="7" style="fill:var(--teal)"/>
+        <circle cx="530" cy="100" r="7" style="fill:var(--teal)"/>
+        <circle cx="530" cy="220" r="7" style="fill:var(--teal)"/>
+        <circle cx="230" cy="160" r="7" style="fill:var(--navy)"/>
+        <circle cx="170" cy="100" r="7" style="fill:var(--navy)"/>
+        <circle cx="170" cy="220" r="7" style="fill:var(--navy)"/>
+        <circle cx="110" cy="160" r="7" style="fill:var(--navy)"/>
+
+        <circle cx="350" cy="100" r="13" style="fill:none; stroke:var(--amber); stroke-width:2"/>
+        <circle cx="350" cy="220" r="13" style="fill:none; stroke:var(--amber); stroke-width:2"/>
+        <circle cx="230" cy="160" r="13" style="fill:none; stroke:var(--amber); stroke-width:2"/>
+
+        <text x="530" y="20" text-anchor="middle" font-family="IBM Plex Sans" font-size="14" font-weight="700" style="fill:var(--teal)">lớp +1</text>
+        <text x="110" y="20" text-anchor="middle" font-family="IBM Plex Sans" font-size="14" font-weight="700" style="fill:var(--navy)">lớp −1</text>
+
+        <text x="230" y="298" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" style="fill:var(--muted)">1</text>
+        <text x="290" y="298" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" style="fill:var(--muted)">2</text>
+        <text x="350" y="298" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" style="fill:var(--muted)">3</text>
+        <text x="530" y="298" text-anchor="middle" font-family="IBM Plex Mono" font-size="12" style="fill:var(--muted)">6</text>
+
+        <line x1="230" y1="255" x2="350" y2="255" style="stroke:var(--amber); stroke-width:1.6"/>
+        <text x="290" y="272" text-anchor="middle" font-family="IBM Plex Sans" font-size="12.5" style="fill:var(--amber)">lề = 2</text>
+      </svg>
+      <figcaption>Vòng tròn viền vàng là ba vector hỗ trợ: (1,0) của lớp −1, và (3,1), (3,−1) của lớp +1. Chúng nằm đúng trên hai đường lề tại x₁ = 1 và x₁ = 3. Bốn điểm không viền (0,±1), (−1,0), (6,±1) nằm ngoài lề, không ảnh hưởng tới nghiệm.</figcaption>
+    </figure>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p><strong>Vì sao nhìn ra được $w=(1,0)$, $b=-2$ mà không cần giải hệ phương trình?</strong> Vì toàn bộ sự phân tách chỉ nằm trên trục $x_1$ — toạ độ $x_2$ hoàn toàn không ảnh hưởng tới việc phân loại (đối xứng qua trục hoành). Khi một chiều "vô dụng" như vậy, $w$ phải có thành phần 0 ở chiều đó — đây là lý do $w_2=0$. Phần còn lại chỉ là bài toán một chiều: chia đôi khoảng trống từ $x_1=1$ (điểm âm xa nhất về bên phải) đến $x_1=3$ (điểm dương gần nhất về bên trái). Trung điểm là $x_1=2$, và với $w_1=1$ thì $f(x) = x_1 - 2$, đúng bằng 0 tại $x_1=2$, đúng bằng $-1$ tại $x_1=1$ và đúng bằng $+1$ tại $x_1=3$ — khớp quy ước "điểm gần nhất cho $y\cdot f(x)=1$" đã nêu ở mục 2.2.</p>
+      <p><strong>Vector hỗ trợ là gì, nói một cách trần trụi nhất:</strong> đó là những điểm huấn luyện nằm đúng trên đường lề (thoả $y_i f(x_i)=1$, tức là ràng buộc "chặt", không có khoảng dư). Về mặt cơ học, chỉ ba điểm này "chống đỡ" siêu phẳng — giống ba cái chân của một cái ghế đẩu. Bốn điểm còn lại giống như đồ vật đặt lên mặt ghế: có tồn tại hay không cũng không làm ghế nghiêng đi, miễn là chúng không đè lên đúng chỗ chân ghế.</p>
+    </div>
+
+    <div class="table-scroll">
+    <table>
+      <caption>So sánh nghiệm tính tay với nghiệm từ scikit-learn</caption>
+      <thead><tr><th>Đại lượng</th><th>Tính tay</th><th>SVC(kernel="linear", C=1e6)</th></tr></thead>
+      <tbody>
+        <tr><td>$w_1$</td><td class="num">1</td><td class="num">1,000482</td></tr>
+        <tr><td>$w_2$</td><td class="num">0</td><td class="num">0</td></tr>
+        <tr><td>$b$</td><td class="num">−2</td><td class="num">−2,001124</td></tr>
+        <tr><td>bề rộng lề</td><td class="num">2</td><td class="num">1,999037</td></tr>
+        <tr><td>số vector hỗ trợ</td><td class="num">3</td><td class="num">3</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Ba vector hỗ trợ là $(1,0)$ của lớp âm và $(3,1), (3,-1)$ của lớp dương. Bốn điểm còn lại không tham gia: xoá cả bốn khỏi dữ liệu rồi huấn luyện lại thì nghiệm vẫn thế. Tôi đã thử, và bộ giải cho $w=(1{,}000192; 0{,}000384)$, $b=-2{,}000448$, tức là lệch ở chữ số thập phân thứ tư đúng như sai số nói ở khung dưới. Về lý thuyết thì nghiệm không đổi một chút nào. Đó là đặc điểm riêng của SVM, và cũng là lý do người ta gọi nó là máy vector hỗ trợ.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Đây là tính chất quan trọng nhất để phân biệt SVM với các mô hình tuyến tính khác như hồi quy logistic. Hồi quy logistic dùng <em>tất cả</em> các điểm để cập nhật nghiệm (mỗi điểm đóng góp một gradient, dù nhỏ). SVM (lề cứng) thì ngược lại: nghiệm chỉ là hàm số của các vector hỗ trợ, những điểm khác có "trọng số đóng góp" bằng đúng 0 trong nghiệm đối ngẫu (dual) của bài toán tối ưu. Đây là lý do tên gọi "Support Vector Machine" — cái tên mô tả đúng cơ chế, không phải một cái tên tiếp thị.</p>
+      <p>Hệ quả thực dụng: nếu bạn có một tập dữ liệu khổng lồ nhưng phân tách "rõ ràng" (đa số điểm nằm xa mặt phân chia), thì về lý thuyết bạn có thể xoá bớt các điểm không phải vector hỗ trợ mà không đổi nghiệm — đây chính là thứ bài giảng vừa kiểm chứng bằng thực nghiệm ở đoạn trên.</p>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">Cột bên phải không tròn, và đó là câu chuyện thật</span>
+      <blockquote class="original" style="background:transparent; border-left:none; padding:0; margin-bottom:14px;">
+        <p>$C=1e6$ không phải lề cứng, nó là lề mềm với hình phạt rất lớn. Nghiệm số vì thế lệch khỏi nghiệm đúng ở chữ số thứ tư. Đừng sửa nó thành 1,000000 cho đẹp: khi bạn so kết quả của mình với kết quả bạn bên cạnh và thấy lệch $5\cdot10^{-4}$, bạn cần biết rằng đó là chuyện bình thường chứ không phải một trong hai người sai.</p>
+        <p>Hệ quả sắc hơn: điểm $(2,0)$ nằm đúng trên mặt phân chia lý thuyết, nên $w\cdot x+b=0$. Mô hình đã học cho ra $-0{,}000161$, tức là nó xếp điểm ấy vào lớp âm vì một sai số làm tròn. Với điểm nằm sát mặt phân chia thì nhãn không do mô hình quyết định mà do dấu phẩy động quyết định.</p>
+      </blockquote>
+      <div class="insight" style="background:transparent; border:none; padding:0; margin:0;">
+        <div class="head">🧠 Vì sao điều này quan trọng khi đi thi và khi debug</div>
+        <p>Có hai bài học tách biệt ở đây, đừng gộp làm một:</p>
+        <ol>
+          <li><strong>Bài học về số học:</strong> mọi bộ giải số (solver) đều dừng lại khi sai số nhỏ hơn một ngưỡng gọi là <code>tol</code>, chứ không chạy tới khi sai số bằng 0 tuyệt đối. $C=10^6$ là một con số hữu hạn rất lớn chứ không phải "vô cực", nên nghiệm vẫn là nghiệm của lề <em>mềm</em>, chỉ là mềm với mức phạt gần như cứng. Khi báo cáo kết quả, việc lệch ở chữ số thập phân thứ 3–4 là dấu hiệu solver hoạt động đúng, không phải hoạt động sai.</li>
+          <li><strong>Bài học về ranh giới quyết định:</strong> với một điểm mà $f(x)$ lý thuyết đúng bằng 0, bất kỳ nhiễu số học cực nhỏ nào cũng đủ đẩy nó sang một phía. Đây không phải lỗi của mô hình — đó là vấn đề toán học không có lời giải (một điểm nằm đúng trên biên thì "thuộc cả hai lớp" hoặc "không thuộc lớp nào" tuỳ định nghĩa), và thư viện buộc phải chọn một quy ước để trả lời. Điều này sẽ quay lại ở mục 3, với một ví dụ cụ thể hơn.</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+  <section id="s24">
+    <h3 class="subsection">2.4 Lề mềm và tham số C</h3>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Dữ liệu thật không tách được bằng đường thẳng. Lề mềm cho phép vi phạm, mỗi vi phạm trả một khoản phạt $C$:</p>
+      <p>$$\min_{w,b,\xi} \ \frac{1}{2}\lVert w \rVert^2 + C\sum_i \xi_i, \qquad y_i(w\cdot x_i+b) \ge 1-\xi_i,\ \ \xi_i \ge 0.$$</p>
+      <p>$C$ nhỏ nghĩa là vi phạm rẻ, nên mô hình chọn lề rộng và chịu sai nhiều. $C$ lớn nghĩa là vi phạm đắt, nên mô hình bóp lề lại để chiều lòng từng điểm. Đo thật trên TF-IDF ký tự 2143 đặc trưng của tác vụ 1:</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p><strong>Biến $\xi_i$ (đọc là "xi") là gì?</strong> Nó đo mức độ điểm $i$ "phạm luật" — bao nhiêu đơn vị mà điểm ấy không đạt được yêu cầu $y_i f(x_i)\ge 1$. Nếu điểm nằm đúng phía và ngoài lề, $\xi_i=0$ (không cần biện hộ gì). Nếu điểm nằm trong lề nhưng vẫn đúng phía, $0<\xi_i<1$. Nếu điểm bị phân loại sai hẳn, $\xi_i>1$. Hàm mục tiêu cộng thêm $C\sum_i\xi_i$ — nghĩa là mô hình phải trả một "hoá đơn" tỉ lệ với tổng mức vi phạm, và $C$ chính là đơn giá của hoá đơn đó.</p>
+      <p><strong>Ẩn dụ:</strong> nghĩ về $C$ như tiền phạt vượt đèn đỏ. Nếu tiền phạt gần như bằng 0 ($C$ nhỏ), tài xế (mô hình) sẵn sàng vượt đèn đỏ liên tục để đi đường tắt (chọn lề rộng, chấp nhận nhiều điểm nằm sai phía) vì đi nhanh quan trọng hơn. Nếu tiền phạt rất cao ($C$ lớn), tài xế sẽ đi vòng vèo, dừng đúng từng cột đèn (bóp lề hẹp lại) để không vi phạm một điểm dữ liệu huấn luyện nào, kể cả khi phải đi một con đường ngoằn ngoèo (dễ quá khớp).</p>
+      <p>Về bản chất, $C$ đóng đúng vai trò của một siêu tham số điều chỉnh cân bằng thiên lệch–phương sai (bias–variance trade-off): $C$ nhỏ → thiên lệch cao, phương sai thấp (mô hình đơn giản, ổn định); $C$ lớn → thiên lệch thấp, phương sai cao (mô hình phức tạp, dễ đổi khi dữ liệu đổi).</p>
+    </div>
+
+    <div class="table-scroll">
+    <table>
+      <caption>Ảnh hưởng của C trên TF-IDF ký tự, 2143 đặc trưng, tác vụ 1</caption>
+      <thead><tr><th class="num">C</th><th class="num">Tập đã học</th><th class="num">Kiểm định</th><th class="num">Vector hỗ trợ</th><th class="num">Tỉ lệ</th></tr></thead>
+      <tbody>
+        <tr><td class="num">0,01</td><td class="num">0,3482</td><td class="num">0,3482</td><td class="num">4506</td><td class="num">93,9%</td></tr>
+        <tr><td class="num">0,1</td><td class="num">0,6142</td><td class="num">0,6137</td><td class="num">4434</td><td class="num">92,4%</td></tr>
+        <tr><td class="num">1</td><td class="num">0,7056</td><td class="num">0,6898</td><td class="num">3426</td><td class="num">71,4%</td></tr>
+        <tr><td class="num">4</td><td class="num">0,7131</td><td class="num">0,6989</td><td class="num">2988</td><td class="num">62,2%</td></tr>
+        <tr><td class="num">10</td><td class="num">0,7129</td><td class="num">0,7018</td><td class="num">2834</td><td class="num">59,0%</td></tr>
+        <tr class="highlight"><td class="num">100</td><td class="num">0,7217</td><td class="num">0,7077</td><td class="num">3729</td><td class="num">77,7%</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Đọc cột vector hỗ trợ trước: $C$ càng lớn thì lề càng hẹp, càng ít điểm nằm trong lề, nên số vector hỗ trợ giảm từ 93,9% xuống 59,0%. Ở $C=0{,}01$ thì gần như cả tập huấn luyện là vector hỗ trợ, và mô hình lúc ấy chỉ đoán được 0,3482.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Đây là một mối liên hệ đáng nhớ: <strong>số vector hỗ trợ là một "phong vũ biểu" cho độ rộng của lề</strong>, không cần vẽ hình cũng đoán được xu hướng. Lề rộng (do $C$ nhỏ) "nuốt" nhiều điểm dữ liệu vào bên trong nó — mọi điểm nằm trong lề đều có $\xi_i>0$ nên đều là vector hỗ trợ (trong lề mềm, định nghĩa vector hỗ trợ mở rộng ra cả các điểm vi phạm, không chỉ các điểm nằm đúng trên biên lề như ở lề cứng). Lề hẹp (do $C$ lớn) chỉ "chạm" vào rất ít điểm.</p>
+    </div>
+
+    <div class="insight" style="border-color:color-mix(in srgb, var(--amber) 40%, transparent); background:var(--amber-soft);">
+      <div class="head" style="color:var(--amber);">🧠 Vì sao 0,3482 "vừa hay" — kỹ năng chẩn đoán mô hình sàn</div>
+      <blockquote class="original" style="background:transparent; border-left:4px solid var(--amber); margin-bottom:14px;">
+        <p>Con số 0,3482 ấy không phải một điểm kém bất kỳ. Nó bằng chằn chặn điểm của bài nộp gán nhãn 1 cho mọi câu, và kiểm lại thì đúng là mô hình chỉ in ra một nhãn duy nhất. Vi phạm quá rẻ nên nghiệm tối ưu là bỏ cuộc: chịu sai một nửa còn hơn bóp lề. Khi thấy điểm của mình trùng khít điểm của mô hình sàn, hãy in thử phân bố nhãn dự đoán trước khi đi tìm lỗi ở chỗ khác.</p>
+      </blockquote>
+      <p>Đây là một kỹ năng debug thực chiến, không chỉ là lý thuyết. "Mô hình sàn" (baseline) — ví dụ luôn đoán nhãn phổ biến nhất — là điểm neo để biết mô hình của bạn có <em>thật sự học được gì</em> hay không. Khi $C$ quá nhỏ, "tiền phạt" cho việc sai gần như 0, nên nghiệm tối ưu toán học đúng đắn (không phải lỗi code) lại là: chọn $w\approx 0$, lề vô cùng rộng, và chấp nhận đoán sai gần hết — miễn là $\lVert w\rVert^2$ nhỏ nhất có thể. Nếu bạn thấy điểm số của mình đúng bằng điểm của một mô hình "đoán mù", đừng vội đi soát lại code load dữ liệu — hãy kiểm tra phân bố nhãn dự đoán trước, có thể nó đang bảo bạn tăng $C$ lên.</p>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">Dòng cuối đi ngược lại, và tôi không có lời giải thích chắc chắn</span>
+      <blockquote class="original" style="background:transparent; border-left:none; padding:0; margin-bottom:14px;">
+        <p>Từ $C=10$ lên $C=100$, tỉ lệ vector hỗ trợ tăng trở lại lên 77,7%, ngược hẳn xu hướng của năm dòng trên. Điểm kiểm định cũng lên, thành cao nhất bảng.</p>
+        <p>Tôi không có một lời giải thích tôi dám in ra. Giả thuyết dễ chịu nhất là bài toán ở $C$ lớn khó hội tụ hơn nên nghiệm chưa phải nghiệm tối ưu, nhưng tôi chưa kiểm được điều đó và sẽ không viết một cơ chế nghe hay để lấp chỗ trống.</p>
+        <p>Điều nên rút ra: chênh lệch giữa 0,7018 và 0,7077 là 0,0058, nhỏ hơn dải nhiễu 0,0177 của buổi 07. Nghĩa là bảng này không chứng minh $C=100$ tốt hơn $C=10$. Nó chỉ chứng minh $C \le 0{,}1$ là hỏng.</p>
+      </blockquote>
+      <div class="insight" style="background:transparent; border:none; padding:0; margin:0;">
+        <div class="head">🧠 Đây là bài học quý nhất của cả mục 2.4, và nó không nằm ở công thức</div>
+        <p>Sự trung thực khoa học ở đây đáng học theo hơn cả kỹ thuật SVM: khi dữ liệu không khớp giả thuyết đẹp đẽ, người viết bài không "chế" ra một cơ chế nghe hợp lý để lấp khoảng trống — mà để ngỏ, và đưa ra một giả thuyết kiểm được (hội tụ số học) kèm lời thú nhận "chưa kiểm". Đây chính là tinh thần của bài tập 3 ở mục 4: bạn được giao nhiệm vụ đi kiểm giả thuyết ấy.</p>
+        <p><strong>Khái niệm "dải nhiễu" (noise band) là gì và vì sao nó quan trọng hơn bản thân con số?</strong> Nếu bạn huấn luyện lại cùng một mô hình nhiều lần (đổi seed ngẫu nhiên, đổi cách chia tập kiểm định), điểm số sẽ dao động ngay cả khi không đổi gì về thuật toán — dải nhiễu 0,0177 (dẫn từ buổi 07) chính là biên độ dao động tự nhiên ấy. Một chênh lệch 0,0058 — nhỏ hơn hẳn dải nhiễu — không đủ để khẳng định "tốt hơn", nó chỉ là may rủi thống kê. Đây là lý do các bài báo khoa học nghiêm túc luôn báo cáo độ lệch chuẩn hoặc khoảng tin cậy bên cạnh điểm số trung bình — một con số đơn lẻ, dù đẹp đến đâu, không nói lên điều gì nếu không biết nó dao động trong khoảng nào.</p>
+        <p>Ngược lại, kết luận "$C\le 0{,}1$ là hỏng" thì <em>vượt xa</em> dải nhiễu (0,3482 và 0,6137 cách điểm ở $C=1$ rất xa) — nên đó là kết luận có thể tin, khác hẳn với việc so 0,7018 và 0,7077.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s25">
+    <h3 class="subsection">2.5 Kernel: đổi hình dạng ranh giới mà không đổi thuật toán</h3>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Thủ thuật kernel thay tích vô hướng $x\cdot x'$ bằng một hàm $K(x,x')$ đóng vai trò tích vô hướng trong một không gian khác, thường là không gian nhiều chiều hơn. Ranh giới vẫn là siêu phẳng ở không gian ấy, và cong khi nhìn từ không gian gốc. Cái hay là bạn không bao giờ phải dựng không gian ấy ra.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p><strong>Vì sao cần kernel?</strong> Rất nhiều bài toán thật không tách được bằng một đường thẳng — ví dụ kinh điển là hai lớp xếp thành hai vòng tròn đồng tâm (chính là bài tập 4 ở mục 4). Không có đường thẳng nào tách được chúng trong mặt phẳng 2D. Nhưng nếu ta "nâng" mỗi điểm $(x_1,x_2)$ lên không gian 3 chiều bằng phép biến đổi $\phi(x_1,x_2) = (x_1,x_2,x_1^2+x_2^2)$, hai vòng tròn (khác bán kính) sẽ nằm ở hai "độ cao" khác nhau theo trục thứ ba — và một mặt phẳng nằm ngang có thể tách chúng dễ dàng. Nhìn từ không gian gốc (chiếu ngược mặt phẳng đó xuống 2D), ranh giới trông cong — đó chính là một đường tròn.</p>
+      <p><strong>"Thủ thuật kernel" (kernel trick) tiết kiệm được gì?</strong> Nếu làm theo cách trên một cách trực tiếp — biến đổi từng điểm dữ liệu sang không gian mới rồi mới tính toán — chi phí tính toán có thể bùng nổ khi không gian mới có hàng nghìn, thậm chí vô hạn chiều (như kernel RBF). Toàn bộ thuật toán SVM, hoá ra, chỉ cần biết <em>tích vô hướng</em> giữa các cặp điểm ($x_i\cdot x_j$), không cần biết toạ độ cụ thể của từng điểm trong không gian mới. Hàm kernel $K(x,x')$ tính thẳng ra giá trị tích vô hướng ấy <em>mà không cần đi qua bước biến đổi</em> — đây là ý nghĩa của câu "bạn không bao giờ phải dựng không gian ấy ra". Ví dụ, kernel đa thức bậc 2 tương ứng với một không gian đặc trưng chứa mọi tích của hai đặc trưng gốc, nhưng $K(x,x')=(x\cdot x'+c)^2$ tính ra kết quả đó chỉ bằng vài phép nhân trên không gian gốc.</p>
+    </div>
+
+    <div class="table-scroll">
+    <table>
+      <caption>So sánh các kernel, C = 4</caption>
+      <thead><tr><th>Kernel</th><th class="num">Tập đã học</th><th class="num">Kiểm định</th><th class="num">Vector hỗ trợ</th></tr></thead>
+      <tbody>
+        <tr><td>tuyến tính</td><td class="num">0,7131</td><td class="num">0,6989</td><td class="num">2988</td></tr>
+        <tr class="highlight"><td>đa thức bậc 2</td><td class="num">0,9566</td><td class="num">0,7353</td><td class="num">3294</td></tr>
+        <tr><td>đa thức bậc 3</td><td class="num">0,9857</td><td class="num">0,6892</td><td class="num">4121</td></tr>
+        <tr><td>RBF</td><td class="num">0,9765</td><td class="num">0,7327</td><td class="num">3901</td></tr>
+        <tr><td>sigmoid</td><td class="num">0,5238</td><td class="num">0,6615</td><td class="num">2809</td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Kernel đa thức bậc 2 được 0,7353, hơn tuyến tính 0,0365, tức gấp đôi dải nhiễu nên là chênh lệch thật. Nó cũng vượt hồi quy logistic của buổi 05 (0,6888) một khoảng rõ rệt, nhưng vẫn thua boosting của buổi 08 (0,7961).</p>
+      <p>Bậc 3 thì học thuộc giỏi hơn bậc 2 (0,9857 so với 0,9566) và kiểm định kém hơn 0,0461. Đây đúng là hình ảnh quá khớp mà buổi 07 mô tả, lần này do sức chứa của kernel chứ không phải do số đặc trưng.</p>
+      <p>Dòng sigmoid đáng chú ý theo hướng ngược: điểm huấn luyện 0,5238 thấp hơn điểm kiểm định 0,6615. Khi thấy cảnh ấy thì đừng mừng, hãy nghi: đó là dấu hiệu mô hình chưa khớp nổi dữ liệu chứ không phải nó tổng quát giỏi.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Bảng này là một bài học mẫu về cách <em>đọc</em> một bảng kết quả, không chỉ nhìn con số cao nhất:</p>
+      <ul>
+        <li><strong>Đa thức bậc 2 thắng thật</strong> vì chênh lệch (0,0365) lớn hơn hẳn dải nhiễu 0,0177 — đây là tiêu chuẩn đã học ở mục 2.4, áp dụng lại ở đây.</li>
+        <li><strong>Bậc 3 là quá khớp giáo khoa</strong>: điểm huấn luyện tăng (0,9857 > 0,9566) trong khi điểm kiểm định giảm. Khoảng cách giữa hai cột này — "khoảng hở quá khớp" (generalization gap) — là chỉ số trực tiếp đo mức độ mô hình "học thuộc lòng" thay vì "hiểu quy luật". Không gian đặc trưng của kernel bậc 3 giàu chiều hơn bậc 2 rất nhiều, nên mô hình có đủ "chỗ" để vẽ một ranh giới ngoằn ngoèo len lỏi qua từng điểm huấn luyện — kể cả các điểm nhiễu.</li>
+        <li><strong>Sigmoid là trường hợp ngược — dưới khớp (underfitting)</strong>: điểm huấn luyện còn thấp hơn điểm kiểm định. Đây là dấu hiệu mô hình quá đơn giản (hoặc kernel không phù hợp về mặt toán học — kernel sigmoid $\tanh(\gamma x\cdot x' + r)$ không phải lúc nào cũng là một kernel hợp lệ theo nghĩa Mercer, nên đôi khi hành xử thất thường) đến mức không "học thuộc" nổi ngay cả tập huấn luyện, và việc điểm kiểm định cao hơn chỉ là may rủi trên một mẫu nhỏ chứ không phải năng lực tổng quát hoá tốt. Quy tắc chung: điểm kiểm định <em>không thể</em> phản ánh "tổng quát hoá tốt" nếu mô hình còn chưa khớp được cả dữ liệu nó đã thấy.</li>
+      </ul>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">Trong sáu tiếng thi thì thời gian là một ràng buộc thật</span>
+      <blockquote class="original" style="background:transparent; border-left:none; padding:0; margin-bottom:14px;">
+        <p>Mỗi dòng trong hai bảng trên tốn từ 14 tới 36 giây. Quét cả hai bảng là hơn bốn phút, và đó mới chỉ là hai tham số.</p>
+        <p>LinearSVC giải cùng bài toán tuyến tính bằng thuật toán khác: hơn hai mươi giây rút xuống 0,2 giây, mà được 0,6903 so với 0,6898 của <code>SVC(kernel="linear", C=1)</code>. Chênh lệch 0,0005, tức là không phân biệt được.</p>
+        <p>Quy tắc: dò tham số bằng LinearSVC, chỉ gọi SVC khi thật sự cần kernel.</p>
+      </blockquote>
+      <div class="insight" style="background:transparent; border:none; padding:0; margin:0;">
+        <div class="head">🧠 Vì sao hai công cụ cho gần như cùng một kết quả lại khác tốc độ hàng trăm lần</div>
+        <p><code>SVC(kernel="linear")</code> giải bài toán đối ngẫu (dual) tổng quát — cùng một khung máy có thể cắm bất kỳ kernel nào vào, kể cả các kernel làm không gian đặc trưng vô hạn chiều như RBF. Vì tổng quát nên nó không tận dụng được cấu trúc đặc biệt của trường hợp tuyến tính. <code>LinearSVC</code> thì được viết chuyên biệt cho đúng bài toán tuyến tính, dùng một thuật toán tối ưu khác (thường là toạ độ liên hợp hoặc gradient ngẫu nhiên trên bài toán gốc/primal) tận dụng được việc không cần kernel. Đây là một minh hoạ cụ thể cho nguyên tắc kỹ thuật chung: công cụ càng tổng quát, càng phải trả giá về tốc độ cho những trường hợp đặc biệt (dù trường hợp đó phổ biến).</p>
+        <p><strong>Mẹo thi/thực hành:</strong> khi cần thử nhiều giá trị $C$ (dò siêu tham số) trên mô hình tuyến tính, luôn dùng <code>LinearSVC</code> trước để thu hẹp phạm vi tìm kiếm nhanh, chỉ chuyển sang <code>SVC</code> đầy đủ khi đã xác định cần một kernel phi tuyến, hoặc khi cần các thuộc tính riêng mà <code>LinearSVC</code> không hỗ trợ (ví dụ xác suất dự đoán qua <code>predict_proba</code>).</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s3">
+    <h2 class="section">3. Bài tập mẫu</h2>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p><strong>Đề.</strong> Cho $w=(0{,}4;-0{,}7)$ và $b=0{,}1$. Điểm $x=(2,1)$ thuộc lớp nào, cách siêu phẳng bao xa, và lề rộng bao nhiêu?</p>
+      <p><strong>Bước 1, dấu.</strong></p>
+      <p>$$w\cdot x+b = 0{,}4\cdot 2 + (-0{,}7)\cdot 1 + 0{,}1 = 0{,}8-0{,}7+0{,}1 = 0{,}2 > 0 \Rightarrow \text{lớp} +1.$$</p>
+      <p><strong>Bước 2, khoảng cách.</strong> $\lVert w\rVert = \sqrt{0{,}16+0{,}49}=\sqrt{0{,}65}\approx 0{,}806226$, nên</p>
+      <p>$$d = \frac{|0{,}2|}{0{,}806226} \approx 0{,}248069.$$</p>
+      <p><strong>Bước 3, lề.</strong> $2/\lVert w\rVert \approx 2{,}480695$.</p>
+      <p>Ba con số ấy trả lời ba câu hỏi khác nhau, và đề thi hay trộn chúng vào một câu để xem thí sinh có phân biệt được không.</p>
+    </blockquote>
+
+    <pre><code>import numpy as np
+w, b, x = np.array([0.4, -0.7]), 0.1, np.array([2.0, 1.0])
+f = float(np.dot(w, x) + b)
+print("f = %.4f, lop %s" % (f, "+1" if f &gt; 0 else "-1"))
+print("khoang cach = %.6f" % (abs(f) / np.linalg.norm(w)))
+print("be rong le = %.6f" % (2.0 / np.linalg.norm(w)))</code></pre>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất — cách làm nhanh không máy tính</div>
+      <p>Đây chính là mẫu câu hỏi "cho sẵn $w,b$ và một điểm" đã cảnh báo ngay từ mục tiêu buổi học. Quy trình ba bước không đổi cho mọi đề dạng này:</p>
+      <ol>
+        <li><strong>Dấu</strong>: chỉ cần cộng trừ nhân — không cần căn bậc hai. Làm bước này trước luôn vì nó rẻ nhất và trả lời được câu hỏi "thuộc lớp nào" ngay lập tức.</li>
+        <li><strong>Khoảng cách</strong>: cần $\lVert w\rVert=\sqrt{w_1^2+w_2^2}$. Đây là bước duy nhất cần khai căn. Mẹo tính tay nhanh: $\sqrt{0{,}65}$ nằm giữa $\sqrt{0{,}64}=0{,}8$ và $\sqrt{0{,}81}=0{,}9$, và gần $0{,}8$ hơn nhiều — ước lượng $0{,}806$ là hợp lý chỉ bằng nhẩm, đủ chính xác cho một câu trắc nghiệm có đáp án làm tròn.</li>
+        <li><strong>Lề</strong>: chỉ cần nhân đôi nghịch đảo của $\lVert w\rVert$ đã tính ở bước 2 — không tính lại từ đầu. Đây là lý do nên tính khoảng cách trước, lề sau: lề "ăn theo" kết quả trung gian $\lVert w\rVert$ đã có.</li>
+      </ol>
+      <p><strong>Bẫy thường gặp:</strong> học sinh hay nhầm bước 2 và bước 3 vì cả hai đều chia cho $\lVert w\rVert$. Ghi nhớ: khoảng cách dùng <em>giá trị cụ thể tại điểm $x$</em> ($|w\cdot x+b|$) ở tử số — nó phụ thuộc vào điểm đang xét. Lề thì không phụ thuộc điểm nào cả, tử số luôn là hằng số 2 (từ quy ước chuẩn hoá "điểm gần nhất có $y f(x)=1$" ở mục 2.2) — lề là một thuộc tính của <em>mô hình</em>, không phải của một điểm dữ liệu cụ thể.</p>
+    </div>
+
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p><strong>Một điểm rơi đúng lên siêu phẳng thì thuộc lớp nào?</strong></p>
+      <p>Trong bộ hai mươi bài của buổi này có đúng một câu mà $w\cdot x+b=0$ chằn chặn: $w=(0{,}5;0{,}5;-1)$, $b=0$, $x=(2,2,2)$.</p>
+      <p>Toán học không trả lời được câu ấy, vì điểm nằm trên chính ranh giới. Thư viện thì phải trả lời, và scikit-learn xếp nó vào lớp âm: ngưỡng của nó là $f>0$ chứ không phải $f\ge 0$. Tôi đã kiểm điều này bằng một mô hình có $f$ đúng bằng 0 tại điểm ấy chứ không chép lại từ tài liệu.</p>
+      <p>Bài học không phải là con số, mà là: khi kết quả phụ thuộc vào quy ước ngưỡng, hãy tìm ra quy ước ấy bằng thí nghiệm, đừng đoán.</p>
+    </blockquote>
+
+    <div class="insight">
+      <div class="head">🧠 Phân tích chi tiết &amp; Bản chất</div>
+      <p>Xác nhận nhanh phép tính: $0{,}5\cdot 2+0{,}5\cdot 2-1\cdot 2 = 1+1-2=0$ — đúng là điểm nằm chằn chặn trên siêu phẳng, không phải một phép gần đúng.</p>
+      <p>Về mặt toán học thuần tuý, tập $\{x : w\cdot x+b=0\}$ chính là ranh giới, và một hàm phân loại nhị phân buộc phải gán nó cho <em>một trong hai</em> phía — không có "phía thứ ba" gọi là "ở trên ranh giới". Đây là một quyết định kỹ thuật (convention) của người viết thư viện, không phải một định lý toán học. Bài học ở đây mang tính phương pháp luận rất rõ: <strong>đừng đoán một quy ước — hãy đo nó</strong>. Cách đo được gợi ý trong bài (dựng một mô hình có $f$ đúng bằng 0 rồi gọi <code>predict</code>) là một kỹ thuật tổng quát, áp dụng được cho bất kỳ thư viện hay hàm nào có hành vi không tài liệu hoá rõ ràng ở điểm biên — kiểm bằng thực nghiệm luôn đáng tin hơn suy luận từ tên hàm hay trực giác.</p>
+      <p><strong>Vì sao điều này đáng một câu riêng trong đề thi?</strong> Vì đây chính xác là loại câu hỏi "bẫy" hay xuất hiện: nếu đề cho một điểm mà $f(x)=0$ và hỏi "lớp nào theo scikit-learn", câu trả lời đúng dựa trên quy ước cụ thể của thư viện (lớp âm, vì ngưỡng là $f>0$), chứ không phải một suy luận toán học trừu tượng nào khác.</p>
+    </div>
+  </section>
+
+  <section id="s4">
+    <h2 class="section">4. Bài tập tự làm</h2>
+
+    <div class="exercise">
+      <div class="exercise-head">Bài tập 1 — Hai mươi bài tính tay</div>
+      <div class="exercise-body">
+        <blockquote class="original">
+          <span class="tag">Nội dung gốc</span>
+          <p>File <code>bai-tap-tinh-tay.py</code> trong thư mục buổi này in ra đề gồm mười câu hỏi dấu, năm câu khoảng cách, ba câu bề rộng lề và hai câu vector hỗ trợ.</p>
+        </blockquote>
+        <pre><code># print the worksheet, then the key, then check the key itself
+# python bai-tap-tinh-tay.py
+# python bai-tap-tinh-tay.py --dap-an
+# python bai-tap-tinh-tay.py --kiem</code></pre>
+        <div class="gate">CỔNG KIỂM</div>
+        <blockquote class="original">
+          <p>Làm hết trong 20 phút, không dùng máy tính, rồi mới mở đáp án. Sai một câu là chưa qua.</p>
+          <p>Chế độ <code>--kiem</code> không chấm bài bạn, nó chấm đáp án: đối chiếu từng câu bằng một đường tính khác, và kiểm cả hai điều kiện dễ quên là đề phải có đủ hai lớp và phải có đúng một câu rơi lên siêu phẳng.</p>
+        </blockquote>
+        <div class="insight">
+          <div class="head">🧠 Gợi ý luyện tập</div>
+          <p>20 phút cho 20 câu là 1 phút/câu — đúng nhịp độ cần có để làm câu tính tay trong phòng thi thật. Làm theo đúng thứ tự bài đã dạy ở mục 3: dấu trước (rẻ nhất), rồi khoảng cách (cần một lần khai căn), rồi lề (dùng lại $\lVert w\rVert$ đã tính). Với câu vector hỗ trợ, nhớ lại tiêu chí mục 2.3: một điểm là vector hỗ trợ khi và chỉ khi nó thoả đúng $y f(x)=1$ (lề cứng) hoặc có $\xi_i>0$ (lề mềm).</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exercise">
+      <div class="exercise-head">Bài tập 2 — Dựng lại bảng C</div>
+      <div class="exercise-body">
+        <blockquote class="original">
+          <span class="tag">Nội dung gốc</span>
+          <p>Sáu dòng, bốn cột, kể cả cột vector hỗ trợ.</p>
+        </blockquote>
+        <div class="gate">CỔNG KIỂM</div>
+        <blockquote class="original">
+          <p>Khớp tới chữ số thập phân thứ tư. Rồi trả lời: tỉ lệ vector hỗ trợ ở $C=0{,}01$ là 93,9% nói lên điều gì về lề lúc ấy?</p>
+        </blockquote>
+        <div class="insight">
+          <div class="head">🧠 Gợi ý luyện tập</div>
+          <p>Câu hỏi phụ đang kiểm tra đúng liên hệ đã nêu ở mục 2.4: tỉ lệ vector hỗ trợ cao nghĩa là lề rất rộng, gần như "nuốt" trọn cả tập huấn luyện vào bên trong nó — dấu hiệu của một mô hình gần như bỏ cuộc, chấp nhận vi phạm tràn lan vì $C$ quá nhỏ khiến vi phạm gần như miễn phí.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exercise">
+      <div class="exercise-head">Bài tập 3 — Kiểm lại giả thuyết mà tôi bỏ ngỏ</div>
+      <div class="exercise-body">
+        <blockquote class="original">
+          <span class="tag">Nội dung gốc</span>
+          <p>Mục 2.4 để ngỏ vì sao $C=100$ lại có nhiều vector hỗ trợ hơn $C=10$. Hãy kiểm giả thuyết hội tụ: chạy lại $C=100$ với <code>max_iter</code> lớn hơn hẳn và <code>tol</code> nhỏ hơn hẳn, xem số vector hỗ trợ có đổi không.</p>
+        </blockquote>
+        <div class="gate">CỔNG KIỂM</div>
+        <blockquote class="original">
+          <p>Trả lời bằng số, và chấp nhận cả hai kết cục. Nếu số vector hỗ trợ không đổi thì giả thuyết của tôi sai, và bạn vừa loại được một cách giải thích. Đó cũng là một kết quả.</p>
+        </blockquote>
+        <div class="insight">
+          <div class="head">🧠 Gợi ý luyện tập</div>
+          <p>Đây là bài tập hiếm hoi mà "không tìm ra hiệu ứng" vẫn được tính là hoàn thành tốt — vì mục tiêu là kiểm định một giả thuyết, không phải xác nhận nó. Đối chiếu với phần "Dòng cuối đi ngược lại" ở mục 2.4: nếu tăng <code>max_iter</code> và giảm <code>tol</code> mà số vector hỗ trợ không đổi, bạn đã loại trừ được nguyên nhân "hội tụ chưa xong" — và câu hỏi thật sự (vì sao $C=100$ có nhiều vector hỗ trợ hơn $C=10$) vẫn còn mở, y như tác giả bài giảng đã thừa nhận.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exercise">
+      <div class="exercise-head">Bài tập 4 — Kernel nào cho ranh giới nào</div>
+      <div class="exercise-body">
+        <blockquote class="original">
+          <span class="tag">Nội dung gốc</span>
+          <p>Dựng 200 điểm hai chiều xếp thành hai vòng tròn đồng tâm. Huấn luyện SVM tuyến tính và SVM RBF, vẽ ranh giới quyết định của cả hai.</p>
+        </blockquote>
+        <div class="gate">CỔNG KIỂM</div>
+        <blockquote class="original">
+          <p>Tuyến tính không thể tách hai vòng tròn, và hình vẽ phải cho thấy điều đó chứ không phải chỉ có điểm số nói. Ghi lại macro-F1 của cả hai.</p>
+        </blockquote>
+        <div class="insight">
+          <div class="head">🧠 Gợi ý luyện tập</div>
+          <p>Bài này chính là minh hoạ thực nghiệm cho ví dụ "nâng chiều" đã giải thích ở mục 2.5: hai vòng tròn đồng tâm không thể tách bằng đường thẳng trong 2D, nhưng kernel RBF ánh xạ ngầm dữ liệu sang một không gian mà ở đó việc tách trở nên khả thi. Khi vẽ, hãy chú ý ranh giới của SVM tuyến tính sẽ gần như vô nghĩa (một đường thẳng cắt ngang cả hai vòng tròn), trong khi RBF cho ra một đường cong khép kín bám theo vòng tròn trong.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="exercise">
+      <div class="exercise-head">Bài tập 5 — Lề chịu được bao nhiêu nhiễu</div>
+      <div class="exercise-body">
+        <blockquote class="original">
+          <span class="tag">Nội dung gốc</span>
+          <p>Lấy ví dụ tám điểm ở mục 2.3. Thêm nhiễu Gauss độ lệch chuẩn $\sigma$ vào tất cả các điểm, huấn luyện lại, và tăng dần $\sigma$ cho tới khi nghiệm đổi hẳn.</p>
+        </blockquote>
+        <div class="gate">CỔNG KIỂM</div>
+        <blockquote class="original">
+          <p>Tìm ngưỡng $\sigma$ ấy và so với bề rộng lề bằng 2. Đây là cách kiểm bằng thực nghiệm câu khẳng định ở mục 2.2: lề chính là lượng nhiễu mà nghiệm chịu được.</p>
+        </blockquote>
+        <div class="insight">
+          <div class="head">🧠 Gợi ý luyện tập</div>
+          <p>Bài tập này đóng vòng lặp với chính lý lẽ đã đọc ở mục 2.2 (phép ẩn dụ "đỗ xe giữa khoảng trống"): nếu lý thuyết đúng, ngưỡng $\sigma$ mà nghiệm bắt đầu đổi phải có cùng bậc độ lớn với nửa bề rộng lề (tức xấp xỉ 1, vì lề toàn phần là 2), vì đó là khoảng cách từ vector hỗ trợ tới mặt phân chia. Nếu số đo thực nghiệm của bạn lệch quá xa con số này, đáng để nghi ngờ cách bạn thêm nhiễu (nhiễu thêm vào cả tám điểm cùng lúc có thể làm dịch chuyển cả vị trí "trung điểm tối ưu", không chỉ đơn thuần kiểm tra độ nhạy của một vector hỗ trợ).</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="s5">
+    <h2 class="section">Chuẩn bị cho buổi sau</h2>
+    <blockquote class="original">
+      <span class="tag">Nội dung gốc</span>
+      <p>Buổi 10 rời hẳn học có giám sát: K-Means, PCA, t-SNE, DBSCAN. Mang theo câu hỏi: khi không có nhãn thì lấy gì làm thước đo đúng sai?</p>
+    </blockquote>
+    <div class="insight">
+      <div class="head">🧠 Cầu nối sang buổi sau</div>
+      <p>Toàn bộ buổi 09 xoay quanh việc tối ưu một hàm mục tiêu có "đáp án đúng" rõ ràng ở mỗi điểm dữ liệu — nhãn $y_i$. Buổi 10 rút mất chiếc neo ấy: không có nhãn để so sánh, "đúng" và "sai" không còn là khái niệm có sẵn nữa. Đây là câu hỏi đáng suy nghĩ trước khi tới lớp: nếu không có nhãn để tính độ chính xác, bạn sẽ dùng gì để nói mô hình phân cụm này "tốt hơn" mô hình phân cụm kia? (Gợi ý nhẹ, không phải đáp án: hãy nghĩ về những đại lượng chỉ cần biết vị trí các điểm, không cần biết nhãn của chúng — ví dụ khoảng cách trong cụm so với khoảng cách giữa các cụm.)</p>
+    </div>
+  </section>
+
+  <footer class="end">
+    Buổi 09 — SVM và lề · TS. Đỗ Phúc Hảo · Luyện Olympic Trí tuệ nhân tạo. Bản trình bày này giữ nguyên toàn bộ nội dung gốc (khối có viền xanh) và bổ sung phần giải thích, ẩn dụ, ví dụ và sơ đồ (khối 🧠) để đào sâu kiến thức.
+  </footer>
+
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    if (window.renderMathInElement) {
+      renderMathInElement(document.body, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      });
+    }
+  });
+</script>
+</body>
+</html>
