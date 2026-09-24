@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buổi 11 – Đặc trưng thủ công cho văn bản và ảnh</title>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#fafaf7;--fg:#1d2330;--mut:#5b6474;--card:#fff;--line:#d9dde5;--q:#eef3fb;--qb:#3b6fd4;--ai:#fff6e5;--aib:#e39a1b;--ok:#1f8a5b;--bad:#c73e3e;--acc:#3b6fd4;--code:#f1f3f7}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#14171f;--fg:#e6e9f0;--mut:#9aa3b5;--card:#1c2130;--line:#333a4d;--q:#1a2540;--qb:#6a9bf0;--ai:#2c2415;--aib:#e8a83a;--ok:#4cc38a;--bad:#f07a7a;--acc:#6a9bf0;--code:#222839}}
+:root[data-theme="dark"]{--bg:#14171f;--fg:#e6e9f0;--mut:#9aa3b5;--card:#1c2130;--line:#333a4d;--q:#1a2540;--qb:#6a9bf0;--ai:#2c2415;--aib:#e8a83a;--ok:#4cc38a;--bad:#f07a7a;--acc:#6a9bf0;--code:#222839}
+html{scroll-padding-top:env(safe-area-inset-top,0px);scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.7 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+main{max-width:860px;margin:0 auto;padding:16px}
+header{padding:28px 0 8px}
+header small{color:var(--mut)}
+h1{font-size:1.8rem;line-height:1.25;margin:.3em 0}
+h2{font-size:1.4rem;margin:2.2em 0 .4em;padding-top:.6em;border-top:2px solid var(--line)}
+h3{font-size:1.15rem;margin:1.6em 0 .3em}
+nav{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+nav a{font-size:.85rem;padding:3px 10px;border:1px solid var(--line);border-radius:99px;color:var(--acc);text-decoration:none;background:var(--card)}
+blockquote{margin:12px 0;padding:10px 16px;background:var(--q);border-left:4px solid var(--qb);border-radius:0 8px 8px 0}
+blockquote p{margin:.4em 0}
+.ai{margin:0 0 18px;padding:10px 16px;background:var(--ai);border-left:4px solid var(--aib);border-radius:0 8px 8px 0}
+.ai p,.ai ul{margin:.4em 0}
+.ai b.t{display:block;margin-bottom:2px}
+.w{overflow-x:auto;margin:8px 0}
+table{border-collapse:collapse;width:100%;font-size:.9rem;background:var(--card)}
+th,td{border:1px solid var(--line);padding:5px 8px;text-align:center}
+td.l,th.l{text-align:left}
+th{background:var(--code)}
+pre{background:var(--code);padding:12px;border-radius:8px;overflow-x:auto;font-size:.85rem;line-height:1.5}
+code{background:var(--code);padding:1px 5px;border-radius:4px;font-size:.9em}
+pre code{padding:0;background:none}
+figure{margin:14px 0;padding:10px;background:var(--card);border:1px solid var(--line);border-radius:10px}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:.88rem;color:var(--mut);margin-top:6px}
+svg text{fill:var(--fg);font-family:system-ui,sans-serif;font-size:13px}
+svg .m{fill:var(--mut);font-size:11px}
+.ax{stroke:var(--line);stroke-width:1}
+.bx{fill:var(--q);stroke:var(--qb);stroke-width:1.5}
+.hl{fill:var(--ai);stroke:var(--aib);stroke-width:2}
+.ln1{stroke:var(--acc);fill:none;stroke-width:2.5}
+.ln2{stroke:var(--aib);fill:none;stroke-width:2.5}
+.ar{stroke:var(--ok);stroke-width:2.5;fill:none}
+.bar{fill:var(--acc)}.bar.bad{fill:var(--bad)}
+.tag{display:inline-block;padding:0 8px;border-radius:99px;font-size:.8rem;background:var(--code);border:1px solid var(--line)}
+footer{margin:40px 0 20px;color:var(--mut);font-size:.85rem}
+</style>
+</head>
+<body>
+<main>
+<header>
+<small>Luyện Olympic Trí tuệ nhân tạo · Phần: Học máy cổ điển · Phục vụ: chung kết</small>
+<h1>Buổi 11 — Đặc trưng thủ công cho văn bản và ảnh</h1>
+<small>Ngày 25 tháng 8 năm 2026 · TS. Đỗ Phúc Hảo</small>
+<p><small>Khung xanh có vạch xanh = nội dung gốc, giữ nguyên. Khung vàng 🧠 = phần giải thích bổ sung.</small></p>
+<nav><a href="#s1">1. Mục tiêu</a><a href="#s2">2. Kiến thức</a><a href="#s23">2.3 Tầng 3</a><a href="#s24">2.4 Tầng 4</a><a href="#s25">2.5 Ảnh</a><a href="#s3">3. Bài mẫu</a><a href="#s4">4. Bài tự làm</a><a href="#s5">Buổi sau</a></nav>
+</header>
+
+<h2 id="s1">1. Mục tiêu</h2>
+<blockquote>
+<p>Vượt 90% macro-F1 ở nhiệm vụ phân loại của tác vụ 1, không dùng mạng nơ ron nào. Mốc cao nhất mà mười buổi trước đạt được là 0,7961, nên đây là một bước nhảy lớn, và nó không đến từ mô hình.</p>
+<p>Buổi này trả lời câu hỏi buổi 10 để lại: tám đặc trưng tay ở buổi 08 chỉ được 0,6029, vậy phải thêm gì?</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>macro-F1</b> là trung bình cộng F1 của từng lớp, mỗi lớp nặng như nhau. Lớp hiếm bị bỏ rơi sẽ kéo điểm xuống, nên không thể "ăn gian" bằng cách chỉ đoán lớp đông.</li>
+<li>Ẩn dụ: hai đội chạy như nhau, đội A đổi xe (đổi mô hình), đội B đổi con đường (đổi cách biểu diễn). Buổi này cho thấy đổi đường, cụ thể là đổi cách <i>nhìn</i> dữ liệu, mới là bước nhảy 0,80 → 0,90+.</li>
+<li>Con số 0,6029 (tám đặc trưng tay) là điểm xuất phát; câu hỏi "phải thêm gì?" chính là câu hỏi về <b>thiết kế đặc trưng</b> (feature engineering).</li>
+</ul></div>
+
+<h2 id="s2">2. Tóm tắt kiến thức</h2>
+<h3>2.1 Vì sao buổi này là buổi quan trọng nhất của cả khoá</h3>
+<blockquote>
+<p>Đề thi mặc định cấm mô hình tiền huấn luyện và cấm tải bất cứ thứ gì từ mạng. Nghĩa là toàn bộ phản xạ “lấy một mô hình đã học sẵn rồi tinh chỉnh” bị gạch bỏ. Thứ còn lại trong sáu tiếng là: mô hình nhỏ huấn luyện từ đầu, học máy cổ điển, và đặc trưng do bạn nghĩ ra.</p>
+<p>Trong ba thứ ấy, đặc trưng là thứ có biên độ lớn nhất. Buổi 08 đã đo: đổi mô hình trên cùng một cách biểu diễn được 0,20; đổi cách biểu diễn được 0,19 nữa. Buổi này đẩy tiếp theo đúng hướng ấy và được thêm 0,14.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li>Tiền huấn luyện giống "mượn bộ não đã đọc cả thư viện". Đề cấm điều đó, nên bạn phải tự <b>dạy trí thông minh của mình vào dữ liệu</b> qua đặc trưng: mô hình chỉ học được thứ mà bảng đặc trưng cho nó thấy.</li>
+<li>"Biên độ" là mức điểm có thể thay đổi khi bạn xoay một núm. Ba núm: mô hình (+0,20), cách biểu diễn (+0,19), đặc trưng nhắm đúng luật (+0,14). Khi đã dùng hết hai núm đầu, núm thứ ba vẫn còn dư địa lớn.</li>
+</ul></div>
+
+<h3>2.2 Bốn tầng đặc trưng, mỗi tầng giữ nguyên tầng dưới</h3>
+<blockquote>
+<div class="w"><table>
+<tr><th>Tầng</th><th>Số đặc trưng</th><th class="l">Thêm gì</th></tr>
+<tr><td>1</td><td>329</td><td class="l">túi từ, không hơn</td></tr>
+<tr><td>2</td><td>3766</td><td class="l">cặp từ liền nhau, từ đầu, từ cuối, số từ, hậu tố tại từng vị trí</td></tr>
+<tr><td>3</td><td>5269</td><td class="l">tách mỗi từ thành gốc và hậu tố; cặp chéo từ đầu với hậu tố của từ cuối</td></tr>
+<tr><td>4</td><td>16267</td><td class="l">mọi cặp từ trong câu, bất kể xa gần, cả ở dạng gốc lẫn dạng hậu tố</td></tr>
+</table></div>
+<p>Đo trên cùng một lần chia 80/20, bốn mô hình tuyến tính:</p>
+<div class="w"><table>
+<tr><th rowspan="2" class="l">Mô hình</th><th colspan="2">Tầng 1</th><th colspan="2">Tầng 2</th><th colspan="2">Tầng 3</th><th colspan="2">Tầng 4</th></tr>
+<tr><th>học</th><th>kiểm</th><th>học</th><th>kiểm</th><th>học</th><th>kiểm</th><th>học</th><th>kiểm</th></tr>
+<tr><td class="l">logistic C = 4</td><td>0,7324</td><td>0,6800</td><td>0,9122</td><td>0,8090</td><td>0,9646</td><td>0,8997</td><td>0,9775</td><td>0,8665</td></tr>
+<tr><td class="l">logistic C = 100</td><td>0,7331</td><td>0,6838</td><td>0,9767</td><td>0,7770</td><td>0,9996</td><td>0,9249</td><td>1,0000</td><td>0,8903</td></tr>
+<tr><td class="l">LinearSVC C = 1</td><td>0,7321</td><td>0,6799</td><td>0,9418</td><td>0,8064</td><td>0,9908</td><td>0,9214</td><td>0,9948</td><td>0,8932</td></tr>
+<tr><td class="l">LinearSVC C = 10</td><td>0,7327</td><td>0,6835</td><td>0,9769</td><td>0,7625</td><td>1,0000</td><td>0,9360</td><td>1,0000</td><td>0,9033</td></tr>
+</table></div>
+<p>Đọc theo hàng ngang thì thấy ngay hình dạng của cả buổi: tầng 1 quanh 0,68, tầng 2 quanh 0,79, tầng 3 vọt lên 0,93, rồi tầng 4 tụt xuống 0,90.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Đọc bảng:</b> "học" là điểm trên phần dùng để huấn luyện, "kiểm" là điểm trên phần 20% giữ lại. Khoảng cách học − kiểm chính là mức <b>học thuộc</b> (overfit). Ví dụ LinearSVC C = 10: tầng 3 có 1,0000 − 0,9360 = 0,0640; tầng 4 vẫn 1,0000 nhưng kiểm chỉ 0,9033, khoảng cách phình ra 0,0967.</li>
+<li><b>C</b> lớn = ít phạt độ phức tạp, mô hình dám khớp sát dữ liệu học; C nhỏ = kiềm chế hơn. Nhưng quan sát quan trọng là: đổi C chỉ xê dịch điểm vài phần trăm, còn đổi <i>tầng đặc trưng</i> làm điểm nhảy 0,25.</li>
+<li><b>Túi từ</b> (tầng 1) chỉ đếm từ nào xuất hiện, mất thứ tự. Tầng 2 lấy lại một phần thứ tự (cặp liền kề, vị trí đầu/cuối). Nhớ: mỗi tầng <i>chứa</i> tầng dưới, nên đây là thí nghiệm "cộng dồn" sạch.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 600 270" role="img" aria-label="Điểm kiểm định theo tầng đặc trưng">
+<line class="ax" x1="60" y1="50" x2="60" y2="230"/><line class="ax" x1="60" y1="230" x2="580" y2="230"/>
+<line class="ax" x1="60" y1="140" x2="580" y2="140" stroke-dasharray="4 4"/>
+<text class="m" x="10" y="54">1,00</text><text class="m" x="10" y="144">0,80</text><text class="m" x="10" y="234">0,60</text>
+<polyline class="ln1" points="100,192.4 235,156.9 370,78.8 505,93.5"/>
+<polyline class="ln2" points="100,192.3 235,150.3 370,83.8 505,99.6"/>
+<circle cx="100" cy="192.4" r="4" fill="var(--acc)"/><circle cx="235" cy="156.9" r="4" fill="var(--acc)"/><circle cx="370" cy="78.8" r="4" fill="var(--acc)"/><circle cx="505" cy="93.5" r="4" fill="var(--acc)"/>
+<text x="345" y="62">0,9360</text><text x="480" y="82">0,9033</text><text x="76" y="182">0,6835</text><text x="211" y="146">0,7625</text>
+<text x="80" y="252">Tầng 1</text><text x="215" y="252">Tầng 2</text><text x="350" y="252">Tầng 3</text><text x="485" y="252">Tầng 4</text>
+<text x="330" y="20" style="fill:var(--acc)">— LinearSVC C = 10 (kiểm)</text><text x="330" y="37" style="fill:var(--aib)">— logistic C = 100 (kiểm)</text>
+</svg>
+<figcaption>Sơ đồ 1: điểm kiểm định theo tầng. Đường lên dốc rồi gãy xuống ở tầng 4: hình dạng "chữ Λ" của cả buổi.</figcaption>
+</figure>
+</div>
+
+<h3 id="s23">2.3 Vì sao tầng 3 vọt lên</h3>
+<blockquote>
+<p>Ngữ pháp Tơ Ma có một luật hợp thì: từ chỉ thời gian đứng đầu câu phải hợp với hậu tố thì của động từ đứng cuối câu. Hai chỗ ấy cách nhau ba tới sáu từ.</p>
+<p>Đây chính là lý do n-gram ký tự đứng lại ở 0,6888. Một n-gram dài năm ký tự không bao giờ nhìn thấy cùng lúc cả từ đầu lẫn hậu tố cuối, nên nó không thể biểu diễn luật ấy dù có bao nhiêu đặc trưng đi nữa. Đó không phải vấn đề số lượng, mà là vấn đề tầm nhìn.</p>
+<p>Tầng 3 làm đúng hai việc:</p>
+<p>1. Tách từ thành gốc và hậu tố. Hậu tố là nơi chứa thì và số nhiều, nên tách nó ra là biến một luật ngữ pháp thành một cột trong bảng.</p>
+<p>2. Ghép chéo từ đầu với hậu tố cuối thành một đặc trưng duy nhất DAUxHTC. Mô hình tuyến tính không tự nhân hai đặc trưng với nhau được, nên nếu bạn không ghép sẵn thì nó không bao giờ học được quan hệ ấy.</p>
+</blockquote>
+<blockquote>
+<p><b>Quy tắc rút ra được, dùng cho mọi bài chứ không riêng bài này</b></p>
+<p>Mô hình tuyến tính chỉ cộng, không nhân. Mọi quan hệ dạng A hợp với B phải được bạn nhân sẵn thành một đặc trưng ghép, nếu không nó nằm ngoài tầm với của mô hình.</p>
+<p>Cây và rừng thì nhân được, vì mỗi nhánh là một phép giao. Đó là lý do buổi 08 boosting hơn hồi quy logistic 0,1073 trên cùng một cách biểu diễn. Nhưng ngay cả cây cũng phải thấy được hai cột ấy đã, mà n-gram ký tự thì không cho nó thấy.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Ví dụ tương tự (tiếng Anh, chỉ để hiểu):</b> "<i>Yesterday</i> I walk<b>ed</b>" đúng, "<i>Yesterday</i> I walk" sai. Muốn phát hiện lỗi, phải nhìn <i>đồng thời</i> từ đầu và đuôi động từ cuối câu, cách nhau vài từ. Tơ Ma làm điều này bằng hậu tố.</li>
+<li><b>Vì sao tuyến tính không làm được:</b> điểm = tổng trọng số × đặc trưng. Cho "có từ thời gian quá khứ" trọng số +, "có hậu tố quá khứ" trọng số +, thì câu <i>quá khứ + hậu tố hiện tại</i> vẫn có điểm trung bình, không bị phạt. Đây là bài toán kiểu <b>XOR</b>: đúng khi hai điều kiện <i>khớp nhau</i>, không phải khi từng điều kiện đúng riêng lẻ.</li>
+<li><b>Lời giải:</b> tạo sẵn cột ghép <code>DAUxHTC</code>, ví dụ giá trị "QK×hậu_tố_QK" có trọng số dương, "QK×hậu_tố_HT" có trọng số âm. Việc "nhân" được làm trước khi đưa vào mô hình, và phép nhân trở thành phép tra bảng.</li>
+<li><b>Vấn đề tầm nhìn:</b> n-gram ký tự dài 5 giống cửa sổ 5 chữ cái trượt trên chuỗi. Từ đầu và hậu tố cuối cách nhau ba đến sáu từ, tức hàng chục ký tự, nên không cửa sổ nào chứa cả hai. Thêm hàng nghìn cửa sổ nữa vẫn vô ích, vì không cái nào rộng hơn.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 620 250" role="img" aria-label="Luật hợp thì giữa từ đầu và hậu tố từ cuối">
+<defs><marker id="ah" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="var(--ok)"/></marker></defs>
+<rect class="hl" x="10" y="100" width="80" height="40" rx="6"/><text x="22" y="125">DAU</text>
+<rect class="bx" x="105" y="100" width="70" height="40" rx="6"/><text x="125" y="125">từ 2</text>
+<rect class="bx" x="190" y="100" width="70" height="40" rx="6"/><text x="210" y="125">từ 3</text>
+<rect class="bx" x="275" y="100" width="70" height="40" rx="6"/><text x="295" y="125">từ 4</text>
+<rect class="bx" x="360" y="100" width="70" height="40" rx="6"/><text x="380" y="125">từ 5</text>
+<rect class="bx" x="445" y="100" width="90" height="40" rx="6"/><text x="453" y="125">gốc</text>
+<rect class="hl" x="490" y="100" width="45" height="40" rx="6"/><text x="497" y="125">HTC</text>
+<path class="ar" d="M50,98 C50,30 512,30 512,96" marker-end="url(#ah)"/>
+<text x="215" y="28" style="fill:var(--ok)">DAUxHTC: nhân sẵn thành 1 cột</text>
+<text class="m" x="150" y="86">ba tới sáu từ ở giữa</text>
+<rect x="452" y="165" width="82" height="16" rx="3" fill="none" stroke="var(--bad)" stroke-width="2"/>
+<text x="330" y="196" style="fill:var(--bad)">cửa sổ n-gram 5 ký tự chỉ phủ đoạn này</text>
+<text class="m" x="10" y="232">Từ đầu và hậu tố thì của từ cuối cách xa hơn mọi cửa sổ 5 ký tự.</text>
+</svg>
+<figcaption>Sơ đồ 2: luật hợp thì nối hai đầu câu. Mũi tên xanh là quan hệ cần bắt; khung đỏ là tầm nhìn của n-gram ký tự.</figcaption>
+</figure>
+<ul>
+<li><b>Cây hơn logistic 0,1073</b> vì mỗi nhánh cây là một phép AND (giao): "từ đầu = X và hậu tố cuối = Y". Cây tự nhân được, nhưng chỉ khi hai cột đó tồn tại. Kết luận chung: <i>tầm nhìn</i> (đặc trưng có chứa thông tin hay không) đứng trước <i>sức mạnh mô hình</i>.</li>
+</ul></div>
+
+<h3 id="s24">2.4 Vì sao tầng 4 tụt xuống</h3>
+<blockquote>
+<p>Tầng 4 thêm mọi cặp từ trong câu, tổng cộng 16267 đặc trưng, gấp ba tầng 3. Cả bốn mô hình đều học thuộc gần hoàn hảo, và cả bốn đều kiểm định kém hơn tầng 3. Riêng LinearSVC C = 10 mất 0,0327.</p>
+<p>Lý do là buổi 07 nói lại lần nữa: trong 16267 cặp ấy, đúng một nhúm mang thông tin, phần còn lại là những cặp từ tình cờ đi cùng nhau trong vài câu huấn luyện. Mỗi cặp vô nghĩa cho mô hình thêm một cơ hội học thuộc một câu cụ thể.</p>
+</blockquote>
+<blockquote>
+<p><b>“Thêm đặc trưng” không phải một chiến lược</b></p>
+<p>Tầng 3 sang tầng 4 là một thí nghiệm sạch: cùng dữ liệu, cùng mô hình, cùng cách chia, chỉ khác số đặc trưng. Kết quả là nhiều hơn thì tệ hơn.</p>
+<p>Cái phân biệt tầng 3 với tầng 4 không phải số lượng mà là có nhắm. Tầng 3 ghép đúng cặp mà ngữ pháp cần; tầng 4 ghép tất cả và hy vọng mô hình tự lọc. Trong sáu tiếng thi, cách thứ hai vừa tốn thời gian chạy vừa cho điểm thấp hơn.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Kiểm phép tính:</b> 0,9360 − 0,9033 = 0,0327, khớp với con số "mất" của LinearSVC C = 10. Các mô hình khác mất: logistic C = 4 mất 0,0332, C = 100 mất 0,0346, LinearSVC C = 1 mất 0,0282.</li>
+<li><b>Vì sao nhiều cặp lại hại:</b> một câu n từ có n(n−1)/2 cặp, câu 10 từ đã có 45 cặp, và tầng 4 còn nhân đôi vì có cả dạng gốc lẫn dạng hậu tố. Hầu hết cặp chỉ xuất hiện ở 1–2 câu, nên nó trở thành "dấu vân tay" của câu đó: mô hình dùng dấu vân tay để thuộc lòng nhãn, thay vì học luật.</li>
+<li><b>Ẩn dụ:</b> bạn ôn thi bằng 16267 tờ ghi chú, chỉ vài chục tờ có luật thật. Phần còn lại là chép nguyên đề cũ, nên bạn "thuộc" đề cũ nhưng gặp đề mới thì lúng túng. Đó là học thuộc.</li>
+<li><b>Nhắm so với quét:</b> tầng 3 là đặt câu hỏi đúng ("từ đầu hợp hậu tố cuối không?"); tầng 4 là hỏi mọi thứ và hy vọng. Cách làm đúng khi thi: hiểu dữ liệu → giả thuyết luật → đặc trưng ghép nhắm đúng → đo.</li>
+</ul>
+<figure>
+<svg viewBox="0 0 600 230" role="img" aria-label="Số đặc trưng và điểm kiểm">
+<line class="ax" x1="170" y1="20" x2="170" y2="200"/>
+<text x="10" y="50">Tầng 1 · 329</text><rect class="bar" x="170" y="35" width="2" height="22"/><text x="180" y="52" class="m">0,6835</text>
+<text x="10" y="92">Tầng 2 · 3766</text><rect class="bar" x="170" y="77" width="90" height="22" opacity=".7"/><text x="266" y="94" class="m">0,7625</text>
+<text x="10" y="134">Tầng 3 · 5269</text><rect class="bar" x="170" y="119" width="125" height="22"/><text x="301" y="136" class="m">0,9360 ✓ tốt nhất</text>
+<text x="10" y="176">Tầng 4 · 16267</text><rect class="bar bad" x="170" y="161" width="386" height="22"/><text x="330" y="178" style="fill:#fff">gấp 3 số đặc trưng → 0,9033</text>
+<text class="m" x="170" y="218">Chiều dài thanh = số đặc trưng (tỉ lệ); số nhỏ = điểm kiểm LinearSVC C = 10</text>
+</svg>
+<figcaption>Sơ đồ 3: số đặc trưng tăng vọt ở tầng 4 nhưng điểm kiểm giảm. Nhiều hơn không có nghĩa tốt hơn.</figcaption>
+</figure>
+</div>
+
+<h3 id="s25">2.5 Đặc trưng cho ảnh</h3>
+<blockquote>
+<p>Tác vụ 2 là bài ghép mảnh, và câu hỏi cốt lõi của nó là mảnh nào nằm bên phải mảnh nào. Đo trên 24 ảnh huấn luyện, tức 288 cặp láng giềng phải có thật, xem mỗi loại đặc trưng đoán đúng láng giềng bao nhiêu lần khi chỉ được chọn một:</p>
+<div class="w"><table>
+<tr><th class="l">Đặc trưng</th><th>Đúng</th><th>Tỉ lệ</th></tr>
+<tr><td class="l">histogram màu của cả mảnh</td><td>86</td><td>0,2986</td></tr>
+<tr><td class="l">sai khác bình phương ở biên</td><td>265</td><td>0,9201</td></tr>
+<tr><td class="l">nối dài gradient rồi so biên</td><td>266</td><td>0,9236</td></tr>
+</table></div>
+<p>Histogram màu là đặc trưng toàn cục: nó mô tả cả mảnh và vứt đi đúng thứ bài toán cần, tức là cái gì đang xảy ra ngay tại đường nối. Hai đặc trưng biên nhìn đúng chỗ và hơn nó ba lần.</p>
+<p>Còn giữa hai đặc trưng biên thì 266 so với 265 là hơn nhau một cặp trên 288. Đừng kết luận gradient tốt hơn SSD: đây là ví dụ sạch của một khác biệt không phân biệt được, và buổi 07 đã cho công cụ để nói câu ấy cho chắc.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Ghép mảnh như xếp puzzle:</b> nhìn đường viền, không nhìn màu chủ đạo cả mảnh. Hai mảnh bầu trời xanh có histogram giống hệt nhau dù nằm ở hai góc khác nhau của bức ảnh.</li>
+<li><b>SSD (sai khác bình phương ở biên):</b> lấy cột điểm ảnh ngoài cùng bên phải của mảnh A và cột ngoài cùng bên trái của mảnh B, tính Σ(A − B)². Nhỏ = khớp. <b>Nối dài gradient:</b> dùng độ dốc của cột biên để <i>dự đoán</i> cột kế tiếp rồi so, hợp lý khi ảnh biến đổi mượt.</li>
+<li><b>Gợi ý về con số 288</b> (suy luận của tôi, tài liệu không nói rõ): 288 / 24 = 12 cặp mỗi ảnh, khớp với lưới 4×4 có 4 hàng × 3 cặp trái–phải.</li>
+<li><b>Khác biệt 1/288</b> = 0,0035, quá nhỏ để kết luận. Cách nói trung thực: "266/288 so với 265/288, chưa phân biệt được".</li>
+</ul>
+<figure>
+<svg viewBox="0 0 600 190" role="img" aria-label="So sánh ba đặc trưng ảnh">
+<line class="ax" x1="230" y1="20" x2="230" y2="150"/><line class="ax" x1="230" y1="150" x2="590" y2="150"/>
+<text x="10" y="50">histogram màu</text><rect class="bar bad" x="230" y="32" width="107.5" height="26"/><text x="343" y="51">0,2986 (86/288)</text>
+<text x="10" y="95">SSD ở biên</text><rect class="bar" x="230" y="77" width="331" height="26"/><text x="380" y="96" style="fill:#fff">0,9201 (265/288)</text>
+<text x="10" y="140">gradient + biên</text><rect class="bar" x="230" y="122" width="333" height="26"/><text x="380" y="141" style="fill:#fff">0,9236 (266/288)</text>
+<text class="m" x="230" y="172">Thang 0 → 1; hai thanh cuối dài gần bằng nhau: khác biệt một cặp.</text>
+</svg>
+<figcaption>Sơ đồ 4: đặc trưng nhìn đúng chỗ (biên) hơn đặc trưng toàn cục ba lần.</figcaption>
+</figure>
+</div>
+
+<h2 id="s3">3. Bài tập mẫu</h2>
+<blockquote>
+<p><b>Đề.</b> Nộp một bài cho nhiệm vụ phân loại của tác vụ 1 và vượt Norm_score 100, tức là vượt mô hình trần của kho.</p>
+<p><b>Lời giải.</b> Huấn luyện tầng 3 trên toàn bộ 6000 dòng, dự đoán cho public_test.csv, chấm bằng chính bộ chấm chính thức.</p>
+<pre><code># python dac-trung-quan-he.py --nop
+tv = TfidfVectorizer(analyzer="word", token_pattern=r"\S+", min_df=2)
+A = tv.fit_transform([dac_trung(s, 3) for s in X])
+mo = LinearSVC(C=10.0, random_state=0).fit(A, y)
+nhan = mo.predict(tv.transform([dac_trung(s, 3) for s in de["van_ban_goc"]]))</code></pre>
+<div class="w"><table>
+<tr><th class="l"></th><th>macro-F1</th><th>Norm_score</th></tr>
+<tr><td class="l">mô hình sàn của kho</td><td>35,69</td><td>0</td></tr>
+<tr><td class="l">mô hình trần của kho</td><td>73,24</td><td>100</td></tr>
+<tr><td class="l">boosting của buổi 08</td><td>79,61</td><td>—</td></tr>
+<tr><td class="l">tầng 3 của buổi này, public</td><td>94,77</td><td>157,36</td></tr>
+<tr><td class="l">tầng 3 của buổi này, private</td><td>93,50</td><td>157,19</td></tr>
+</table></div>
+<p>Số đặc trưng khi học cả 6000 dòng là 6083, nhiều hơn 5269 của lần chia 80/20 vì có thêm dữ liệu thì có thêm cặp từ vượt ngưỡng min_df=2.</p>
+</blockquote>
+<blockquote>
+<p><b>Vì sao tôi in cả cột private</b></p>
+<p>Hai dòng cuối lệch nhau 1,27 điểm phần trăm. Đó là con số duy nhất trong bảng nói cho bạn biết bài này có thật sự tổng quát hay không, và nó là con số mà trong phòng thi bạn không nhìn thấy cho tới tiếng cuối cùng.</p>
+<p>Norm_score của hai tập gần như bằng nhau, 157,36 và 157,19, vì sàn và trần của tập riêng cũng thấp hơn một chút. Đó đúng là ý nghĩa của việc chuẩn hoá theo sàn và trần: nó đo bạn so với hai mốc cùng chịu chung độ khó của tập.</p>
+</blockquote>
+<blockquote>
+<p><b>Điểm tác vụ vẫn chỉ có 31,46, và đó không phải lỗi</b></p>
+<p>Bộ chấm in ra DIEM TAC VU 1 bằng 31,46 dù phân loại được 157,36. Lý do nằm trong công thức của đề thật: 0,2 cho phân loại và 0,8 cho dịch, mà bài này không dịch câu nào nên phần dịch được −0,02.</p>
+<p>Đây là bài học chiến thuật quan trọng nhất của tác vụ 1: tám phần mười điểm nằm ở phần dịch. Buổi này thắng lớn ở đúng phần nhẹ cân nhất. Buổi 17 sẽ quay lại phần dịch, và khi ấy mỗi điểm kiếm được đáng giá gấp bốn lần ở đây.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Giải mã code:</b> dòng 1 tạo bộ TF-IDF theo <i>từ</i> (mỗi token là một chuỗi không có khoảng trắng, nên mỗi "đặc trưng chữ" do <code>dac_trung(s, 3)</code> sinh ra là một token); <code>min_df=2</code> bỏ token xuất hiện ở dưới 2 câu, lọc bớt "dấu vân tay". Dòng 2 biến 6000 câu thành ma trận thưa. Dòng 3 huấn luyện LinearSVC C = 10. Dòng 4 dùng <b>cùng bộ từ vựng</b> (<code>tv.transform</code>, không <code>fit</code> lại) cho đề thi, tránh rò rỉ.</li>
+<li><b>Norm_score</b> = (F1 − sàn) / (trần − sàn) × 100. Kiểm: (94,77 − 35,69) / (73,24 − 35,69) × 100 ≈ 157,3, khớp 157,36 (sai lệch do làm tròn). Trên 100 nghĩa là vượt "mô hình trần".</li>
+<li><b>Vì sao 31,46:</b> 0,2 × 157,36 + 0,8 × (−0,02) = 31,472 − 0,016 = 31,456 ≈ 31,46. Tỉ lệ 0,8 / 0,2 = 4 chính là "đáng giá gấp bốn lần". Bài học: <b>điểm thi phân bổ theo trọng số, không theo cảm giác về độ khó</b>.</li>
+<li><b>Private thấp hơn public 1,27 điểm</b> là lệch nhỏ, dấu hiệu tổng quát tốt. Nếu lệch 10 điểm, nghi ngờ bạn đã "chạy theo public" (overfit tập công khai).</li>
+</ul>
+<figure>
+<svg viewBox="0 0 600 150" role="img" aria-label="Thang Norm_score">
+<line class="ax" x1="40" y1="70" x2="560" y2="70" stroke-width="3"/>
+<circle cx="40" cy="70" r="7" fill="var(--bad)"/><text x="10" y="100">sàn 35,69</text><text x="10" y="116" class="m">Norm = 0</text>
+<circle cx="310" cy="70" r="7" fill="var(--aib)"/><text x="265" y="100">trần 73,24</text><text x="270" y="116" class="m">Norm = 100</text>
+<circle cx="520" cy="70" r="9" fill="var(--ok)"/><text x="440" y="100">tầng 3: 94,77</text><text x="455" y="116" class="m">Norm = 157,36</text>
+<text x="200" y="40" class="m">khoảng cách sàn → trần chia thành 100 điểm</text>
+<path d="M310,55 L310,45" stroke="var(--line)"/>
+</svg>
+<figcaption>Sơ đồ 5: Norm_score đo vị trí của bạn so với hai mốc; tầng 3 vượt trần nửa khoảng nữa.</figcaption>
+</figure>
+</div>
+
+<h2 id="s4">4. Bài tập tự làm</h2>
+<h3>Bài tập 1. Dựng lại bảng bốn tầng</h3>
+<blockquote>
+<p>Chạy dac-trung-quan-he.py, rồi tự viết lại hàm dac_trung từ đầu.</p>
+<p><b>Cổng kiểm</b><br>Mười sáu ô của bảng phải khớp tới chữ số thập phân thứ tư. Nếu tầng 3 của bạn không vượt 0,93 thì so lại hai đặc trưng DAUxHTC và G%d: thiếu một trong hai là mất phần lớn khoảng cách.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Gợi ý thực hành:</b>
+<ul><li>Viết theo tầng: hàm nhận (câu, mức) và trả một chuỗi token cách nhau bằng khoảng trắng; mức 1 → túi từ, mức 2 → thêm cặp liền kề/đầu/cuối/số từ/hậu tố tại vị trí, mức 3 → thêm gốc + hậu tố + <code>DAUxHTC</code> + <code>G%d</code>. Đặt <code>random_state</code>, cố định cách chia 80/20 để so được 16 ô. "Mười sáu ô" = 4 mô hình × 4 tầng (điểm kiểm).</li></ul></div>
+
+<h3>Bài tập 2. Bỏ từng đặc trưng ra xem mất gì</h3>
+<blockquote>
+<p>Tầng 3 có sáu nhóm đặc trưng. Bỏ lần lượt từng nhóm, giữ nguyên phần còn lại, đo lại điểm kiểm định.</p>
+<p><b>Cổng kiểm</b><br>Lập bảng sáu dòng, sắp theo mức thiệt hại. Rồi trả lời: nhóm nào bỏ đi mà điểm không đổi quá 0,0177? Những nhóm ấy đang không làm gì cả, và trong phòng thi thì bỏ chúng đi để chạy nhanh hơn là một quyết định đúng.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Gợi ý thực hành:</b>
+<ul><li>Đây là <b>ablation study</b> (thí nghiệm cắt bỏ): mỗi lần bỏ một nhóm, đo lại. Ngưỡng 0,0177 tương đương 0,9360 − 0,0177 ≈ 0,9183. Nhóm còn trên ngưỡng đó khi bị bỏ là "ít việc". Lưu ý: cùng một cách chia, đừng đổi seed giữa các lần bỏ, kẻo nhiễu che mất tín hiệu.</li></ul></div>
+
+<h3>Bài tập 3. Tìm luật ngữ pháp thứ hai</h3>
+<blockquote>
+<p>Mục 2.3 nói về luật hợp thì. Ngữ pháp Tơ Ma còn ít nhất một luật hợp nữa liên quan tới số nhiều. Hãy tìm ra nó bằng cách nhìn dữ liệu, rồi thêm một đặc trưng ghép bắt đúng nó.</p>
+<p><b>Cổng kiểm</b><br>Nói rõ luật ấy bằng một câu, rồi đo: thêm đặc trưng ấy vào tầng 3 thì điểm đổi bao nhiêu? Chấp nhận cả kết quả không đổi, nhưng phải nói được vì sao: có thể tầng 3 đã bắt được luật ấy một cách gián tiếp rồi.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Gợi ý thực hành:</b>
+<ul><li>Cách tìm luật từ dữ liệu: lập <b>bảng chéo</b> (crosstab) giữa hậu tố số nhiều của một từ và hậu tố của từ khác trong câu (danh từ ↔ động từ, hoặc danh từ ↔ tính từ), rồi xem cặp nào đồng xuất hiện nhiều hơn kỳ vọng ngẫu nhiên (χ² hoặc thông tin tương hỗ). Kết quả "không đổi" vẫn hợp lệ nếu cột ghép mới trùng thông tin với <code>DAUxHTC</code> hoặc các cột hậu tố sẵn có.</li></ul></div>
+
+<h3>Bài tập 4. Đặc trưng ảnh, làm lại và mở rộng</h3>
+<blockquote>
+<p>Dựng lại bảng ba đặc trưng ảnh. Rồi thêm loại thứ tư do bạn nghĩ ra, ví dụ chỉ so hai cột biên ở kênh sáng, hoặc so gradient dọc thay vì gradient ngang.</p>
+<p><b>Cổng kiểm</b><br>Nếu đặc trưng mới hơn 0,9236, hãy kiểm xem nó hơn bao nhiêu cặp trên 288. Hơn một hoặc hai cặp thì chưa nói lên điều gì, và cách viết trung thực là ghi cả số cặp chứ không chỉ ghi tỉ lệ.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Gợi ý thực hành:</b>
+<ul><li>Ghi kết quả dạng "267/288 = 0,9271 so với 266/288". Muốn chắc hơn, dùng công cụ buổi 07 (kiểm định cặp hoặc bootstrap trên 24 ảnh): các cặp của cùng một ảnh không độc lập, nên đơn vị lấy mẫu hợp lý là <i>ảnh</i>.</li></ul></div>
+
+<h3>Bài tập 5. Bài nộp đầy đủ cho cả hai nhiệm vụ</h3>
+<blockquote>
+<p>Ghép bài nộp của buổi này với mô hình dịch trần ở baseline/tran.py, nộp một lần duy nhất, và ghi lại DIEM TAC VU 1.</p>
+<p><b>Cổng kiểm</b><br>Điểm phải cao hơn hẳn 31,46, vì phần dịch không còn bằng không. Ghi lại con số ấy, nó là mốc mà buổi 17 phải vượt.</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Gợi ý thực hành:</b>
+<ul><li>Điểm tác vụ = 0,2 × Norm_phân_loại + 0,8 × Norm_dịch. Nếu mô hình dịch trần có Norm_dịch = 100 thì điểm lý thuyết ≈ 0,2 × 157,36 + 0,8 × 100 ≈ 111,5, chỉ để ước lượng; con số thật do bộ chấm in ra. Lưu con số ấy vào sổ, đây là mốc của buổi 17.</li></ul></div>
+
+<h2 id="s5">Chuẩn bị cho buổi sau</h2>
+<blockquote>
+<p>Buổi 12 bắt đầu phần học sâu: perceptron, MLP, và lan truyền ngược tính tay khớp với torch tới sai số máy. Mang theo câu hỏi: nếu đặc trưng thủ công đã được 0,9360 rồi thì mạng nơ ron còn để làm gì?</p>
+</blockquote>
+<div class="ai"><b class="t">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>Hướng suy nghĩ:</b> tầng 3 đạt 0,9360 vì <i>bạn đã biết luật</i> và mã hoá nó bằng tay. Khi luật lạ hoặc quá nhiều (ảnh, âm thanh, luật lồng nhau), không ai ngồi viết hết. Mạng nơ ron có các lớp ẩn <b>tự học cách nhân/ghép đặc trưng</b> (học biểu diễn), thay cho việc bạn ghép tay như <code>DAUxHTC</code>.</li>
+<li>Ngược lại, trong đề thi cấm tiền huấn luyện và chỉ có 6000 dòng, mạng nhỏ dễ học thuộc như tầng 4. Vì thế đặc trưng thủ công vẫn là vũ khí chính; mạng nơ ron sẽ bổ sung khi luật quá phức tạp để viết tay.</li>
+</ul></div>
+
+<footer>Tài liệu gốc: TS. Đỗ Phúc Hảo, Luyện Olympic Trí tuệ nhân tạo, Buổi 11. Phần 🧠 là bổ sung giải thích, không thay thế nội dung gốc.</footer>
+</main>
+</body>
+</html>
