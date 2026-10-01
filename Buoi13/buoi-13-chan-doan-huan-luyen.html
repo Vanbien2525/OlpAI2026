@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buổi 13 – Huấn luyện học sâu: cái gì hỏng thì sửa ở đâu</title>
+<style>
+:root{--ink:#1a2233;--mut:#5b667a;--line:#dfe4ee;--blue:#1f4e79;--red:#c0392b;--bg:#fff}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:16px/1.7 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:920px;margin:0 auto;padding:24px 18px 80px}
+header.hero{border-bottom:3px solid var(--blue);padding-bottom:14px;margin-bottom:8px}
+header.hero small{color:var(--mut);display:block}
+h1{font-size:1.9rem;margin:.2em 0;color:var(--blue)}
+h2{font-size:1.4rem;margin:2.2em 0 .6em;padding-bottom:.2em;border-bottom:2px solid var(--line);color:var(--blue)}
+h3{font-size:1.1rem;margin:1.6em 0 .5em}
+nav.toc{background:#f5f8fc;border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:14px 0;font-size:.93rem}
+nav.toc a{color:var(--blue);text-decoration:none;margin-right:12px;white-space:nowrap}
+blockquote.src{margin:14px 0 8px;padding:10px 16px;border-left:5px solid var(--blue);background:#f7f9fd;border-radius:0 8px 8px 0}
+blockquote.src p{margin:.4em 0}
+.note{margin:8px 0 22px;padding:10px 16px;border-radius:8px;font-size:.96rem}
+.brain{background:#fffbea;border:1px solid #f0e2a0}
+.tech{background:#eef8f1;border:1px solid #bfe0c8}
+.warn{background:#fdeeee;border:1px solid #f0b8b8}
+.note b.t{display:block;margin-bottom:2px}
+.note p{margin:.35em 0}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:.92rem;background:#fff}
+th,td{border:1px solid var(--line);padding:6px 9px;text-align:left;vertical-align:top}
+th{background:#eaf0f8}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+pre{background:#f4f6fa;border:1px solid var(--line);border-radius:8px;padding:10px 12px;overflow-x:auto;font-size:.86rem;line-height:1.5;margin:8px 0}
+code{font-family:Consolas,Menlo,monospace;font-size:.9em;background:#f0f2f7;padding:0 4px;border-radius:4px}
+pre code{background:none;padding:0}
+figure{margin:14px 0;padding:10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:.88rem;color:var(--mut);margin-top:6px}
+.gate{border-left:4px solid #2e8b57;background:#f1faf4;padding:6px 14px;margin:6px 0 10px;border-radius:0 8px 8px 0}
+</style>
+</head>
+<body>
+<main>
+
+<header class="hero">
+<small>Luyện Olympic Trí tuệ nhân tạo</small>
+<h1>Buổi 13 – Huấn luyện học sâu: cái gì hỏng thì sửa ở đâu</h1>
+<small>Phần: Học sâu · Phục vụ: cả hai vòng · Ngày 25 tháng 8 năm 2026 · TS. Đỗ Phúc Hảo</small>
+</header>
+
+<nav class="toc">
+<a href="#s1">1. Mục tiêu</a><a href="#s21">2.1 Bảy lần chạy</a><a href="#s22">2.2 Bảng chẩn đoán</a><a href="#s23">2.3 Hai bệnh, một đường cong</a><a href="#s24">2.4 NaN</a><a href="#s25">2.5 Kết quả nhảy</a><a href="#s3">3. Bài tập mẫu</a><a href="#s4">4. Bài tập tự làm</a><a href="#s5">Ghi chú rà soát</a>
+</nav>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1">1. Mục tiêu</h2>
+<blockquote class="src">
+<p>Nhìn một đường cong loss và nói đúng bệnh trong ba mươi giây.</p>
+<p>Buổi này cũng trả lời câu hỏi buổi 12 để lại: MLP đạt 0,9891 ở tập huấn luyện và 0,9023 ở tập kiểm định, vậy thứ nào đóng được khoảng cách 0,0868? Câu trả lời: trước hết phải biết đó là bệnh gì đã, vì năm cách chữa khác nhau chữa năm bệnh khác nhau.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Bác sĩ không kê thuốc trước khi nghe triệu chứng. Đường cong loss chính là “nhiệt kế + điện tâm đồ” của mạng nơ-ron: cùng là “sốt” nhưng nguyên nhân có thể là cúm, viêm phổi hay sốt xuất huyết, và thuốc cho bệnh này có thể hại bệnh kia. Mục tiêu của buổi học là luyện phản xạ chẩn đoán nhanh.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p>Khoảng cách 0,9891 − 0,9023 = 0,0868 chính là <i>generalization gap</i> (chênh lệch giữa hiệu năng huấn luyện và kiểm định). Một gap lớn chỉ là <b>triệu chứng</b>; nó có thể do overfitting, rò rỉ dữ liệu hoặc phân phối lệch. Vì vậy quy trình là: quan sát đường cong → gọi tên bệnh → mới chọn cách chữa (dừng sớm, giảm capacity, Dropout, regularization…).</p></div>
+
+<!-- ============ 2.1 ============ -->
+<h2 id="s21">2. Tóm tắt kiến thức</h2>
+<h3 id="s21h">2.1 Bảy lần chạy, mỗi lần đổi đúng một thứ</h3>
+<blockquote class="src">
+<p>Tất cả dùng cùng một mạng (300 → 128 → 1, ReLU), cùng dữ liệu (đặc trưng tầng 3 của buổi 11 giảm còn 300 chiều bằng SVD), cùng seed, cùng 60 vòng. Giữa hai lần chạy chỉ có đúng một thứ khác nhau, vì nếu hai thứ cùng đổi thì đường cong không nói được thứ nào gây ra cái gì.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Giống thí nghiệm nấu ăn: muốn biết muối hay đường làm món hỏng, mỗi lần chỉ đổi một gia vị. Đổi cả hai cùng lúc thì không biết đổ lỗi cho ai. Đây là nguyên tắc <i>controlled experiment</i> (thí nghiệm đối chứng).</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p>“300 → 128 → 1” là MLP một tầng ẩn: 300 đặc trưng vào, 128 nơ-ron ẩn ReLU, 1 logit ra (bài toán nhị phân). Giữ cố định dữ liệu, kiến trúc, seed và số epoch để loại các biến gây nhiễu; phần còn lại của buổi là “bệnh nhân” khác nhau chỉ ở một tham số: tốc độ học, cách khởi tạo, số tham số (quá khớp), việc gọi <code>zero_grad</code>, hoặc cách viết hàm loss.</p></div>
+
+<figure>
+<svg viewBox="0 0 690 450" role="img" aria-label="Bảy đường cong loss minh hoạ">
+<style>.t{font:12px sans-serif;fill:#1a2233}.a{fill:none;stroke:#9aa5b8;stroke-width:1}.tr{fill:none;stroke:#1f4e79;stroke-width:2}.va{fill:none;stroke:#c0392b;stroke-width:2}.lg{font:10px sans-serif;fill:#5b667a}</style>
+<!-- 1 -->
+<g transform="translate(10,0)"><text class="t" x="60" y="14">1. Khoẻ mạnh</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,8 C25,45 60,62 205,90"/><path class="va" d="M8,8 C25,30 50,40 100,42 L160,42 L205,48"/></g></g>
+<!-- 2 -->
+<g transform="translate(240,0)"><text class="t" x="20" y="14">2. Tốc độ học quá lớn</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,5 L18,60 L30,70 L60,68 L80,55 L92,8 L100,5 L112,55 L135,65 L205,65"/><path class="va" d="M8,5 L18,45 L40,55 L70,50 L88,10 L100,5 L112,45 L135,58 L205,58"/></g></g>
+<!-- 3 -->
+<g transform="translate(470,0)"><text class="t" x="20" y="14">3. Tốc độ học quá nhỏ</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,30 L205,30"/><path class="va" d="M8,31 L205,31"/></g></g>
+<!-- 4 -->
+<g transform="translate(10,150)"><text class="t" x="20" y="14">4. Khởi tạo bằng 0</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,30 L205,30"/><path class="va" d="M8,31 L205,31"/></g><text class="lg" x="8" y="112">giống hệt ô 3 (xem mục 2.3)</text></g>
+<!-- 5 -->
+<g transform="translate(240,150)"><text class="t" x="20" y="14">5. Quá khớp</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,12 C20,40 35,85 60,93 L205,95"/><path class="va" d="M8,12 C15,25 30,30 50,25 C90,35 150,20 205,8"/></g></g>
+<!-- 6 -->
+<g transform="translate(470,150)"><text class="t" x="20" y="14">6. Quên zero_grad</text><rect class="a" x="0" y="20" width="210" height="100"/><g transform="translate(0,20)"><path class="tr" d="M8,55 C40,60 60,80 100,93 L205,95"/><path class="va" d="M8,55 C30,60 60,55 110,45 C160,30 190,15 205,6"/></g></g>
+<!-- 7 -->
+<g transform="translate(10,300)"><text class="t" x="20" y="14">7. Loss thành NaN</text><rect x="0" y="20" width="210" height="100" fill="#fdeeee" stroke="#9aa5b8"/><g transform="translate(0,20)"><path class="tr" d="M8,40 L50,60 L90,80 L130,88"/><path class="va" d="M8,35 L50,50 L90,45 L130,40"/><path d="M150,0 L150,100" stroke="#c0392b" stroke-dasharray="4 3" stroke-width="1.5"/><text class="lg" x="60" y="70" style="fill:#c0392b">NaN từ vòng 4</text></g></g>
+<!-- legend -->
+<g transform="translate(260,320)"><path class="tr" d="M0,10 L30,10"/><text class="t" x="38" y="14">huấn luyện (xanh)</text><path class="va" d="M0,34 L30,34"/><text class="t" x="38" y="38">kiểm định (đỏ)</text>
+<text class="lg" x="0" y="66">Hình minh hoạ hình dạng (schematic),</text><text class="lg" x="0" y="80">không phải số liệu thật của bài.</text></g>
+</svg>
+<figcaption><b>Mô tả:</b> tái hiện “Hình 1” của bài giảng dưới dạng phác thảo hình dạng. Chỉ cần nhìn hình dạng: (1) hai đường đi xuống rồi kiểm định hơi ngóc lên; (2) nhảy dựng và dao động; (3) và (4) hai đường ngang bằng phẳng; (5) huấn luyện về 0, kiểm định leo dần; (6) kiểm định vọt lên rất dốc; (7) đường bị cắt giữa chừng vì NaN.</figcaption>
+</figure>
+
+<blockquote class="src">
+<p><b>Hình 1.</b> Bảy đường cong. Ô nền hồng là lần chạy chết giữa chừng. Hai ô <i>Tốc độ học quá nhỏ</i> và <i>Khởi tạo bằng 0</i> trông giống hệt nhau, và mục 2.4 nói cách phân biệt.</p>
+<table>
+<tr><th>Ca bệnh</th><th class="n">Vòng hỏng</th><th class="n">Học đầu</th><th class="n">Học cuối</th><th class="n">Kiểm thấp nhất</th><th class="n">Kiểm cuối</th></tr>
+<tr><td>khoẻ mạnh</td><td class="n">—</td><td class="n">0,6443</td><td class="n">0,1014</td><td class="n"><b>0,2994</b></td><td class="n">0,3104</td></tr>
+<tr><td>tốc độ học quá lớn</td><td class="n">—</td><td class="n">10,4209</td><td class="n">0,5871</td><td class="n">0,6298</td><td class="n">0,6329</td></tr>
+<tr><td>tốc độ học quá nhỏ</td><td class="n">—</td><td class="n">0,6936</td><td class="n">0,6936</td><td class="n">0,6938</td><td class="n">0,6938</td></tr>
+<tr><td>khởi tạo bằng 0</td><td class="n">—</td><td class="n">0,6923</td><td class="n">0,6908</td><td class="n">0,6908</td><td class="n">0,6908</td></tr>
+<tr><td>quá khớp</td><td class="n">—</td><td class="n">0,3867</td><td class="n">0,0002</td><td class="n">0,3078</td><td class="n">0,6889</td></tr>
+<tr><td>quên <code>zero_grad</code></td><td class="n">—</td><td class="n">0,5842</td><td class="n">0,0000</td><td class="n">0,3852</td><td class="n">3,6912</td></tr>
+<tr><td>loss thành NaN</td><td class="n"><b>4</b></td><td class="n">0,3202</td><td class="n">0,0975</td><td class="n">0,3158</td><td class="n">NaN</td></tr>
+</table>
+<p>Con số 0,6931 đáng thuộc: đó là − log 0,5, tức là mất mát của một mô hình đoán 50/50 cho mọi mẫu. Hai dòng giữa bảng nằm sát con số ấy suốt 60 vòng, nghĩa là mạng không học được gì cả.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Hãy tưởng tượng một thí sinh trắc nghiệm đúng/sai mà cứ tung đồng xu. Anh ta “sai” ở mức không đổi và không bao giờ khá hơn: đó là 0,6931. Nếu loss của bạn kẹt đúng ở số đó, mạng đang tung đồng xu, chứ không phải đang học.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p>Với cross-entropy nhị phân, nếu mô hình luôn dự đoán p = 0,5 thì mỗi mẫu có loss −[y·ln 0,5 + (1−y)·ln 0,5] = −ln 0,5 = ln 2 ≈ 0,6931, bất kể nhãn. Đây là <b>mốc “không biết gì”</b> (chance-level loss). Loss huấn luyện thấp hơn mốc này nghĩa là đã học được gì đó; đứng sát mốc nghĩa là chưa học.</p>
+<p><b>Đọc bảng:</b> ca khoẻ mạnh có <i>Kiểm thấp nhất</i> (0,2994) &lt; <i>Kiểm cuối</i> (0,3104) → kiểm định đã bò lên nhẹ ở cuối, tức đã quá khớp nhẹ. Ca quá khớp: huấn luyện 0,0002 nhưng kiểm 0,6889 (xấu hơn cả đoán mò!), còn đáy kiểm 0,3078 cho thấy nên dừng sớm. Ca quên <code>zero_grad</code>: huấn luyện 0,0000 mà kiểm 3,6912, tức đã học sai chỗ. Ca NaN: “Kiểm cuối” là NaN, “Vòng hỏng” là 4.</p></div>
+
+<figure>
+<svg viewBox="0 0 470 230" role="img" aria-label="Đồ thị -ln(p) và mốc 0,6931">
+<style>.t{font:12px sans-serif;fill:#1a2233}.a{stroke:#9aa5b8;stroke-width:1}</style>
+<line class="a" x1="40" y1="170" x2="440" y2="170"/><line class="a" x1="40" y1="15" x2="40" y2="170"/>
+<path d="M59,20 L78,55 L116,89 L154,110 L230,135 L306,152 L382,165 L420,170" fill="none" stroke="#1f4e79" stroke-width="2.5"/>
+<line x1="230" y1="135" x2="230" y2="170" stroke="#c0392b" stroke-dasharray="4 3"/><line x1="40" y1="135" x2="230" y2="135" stroke="#c0392b" stroke-dasharray="4 3"/>
+<circle cx="230" cy="135" r="5" fill="#c0392b"/>
+<text class="t" x="240" y="128" style="fill:#c0392b">p = 0,5 → loss = 0,6931</text>
+<text class="t" x="215" y="188">0,5</text><text class="t" x="410" y="188">p = 1</text><text class="t" x="45" y="188">p → 0</text>
+<text class="t" x="50" y="14">loss = −ln(p) khi nhãn thật là 1 (p là xác suất mô hình gán cho nhãn đúng)</text>
+<text class="t" x="60" y="212">Tự tin đúng (p→1): loss→0. Tự tin sai (p→0): loss vọt lên rất nhanh.</text>
+</svg>
+<figcaption><b>Mô tả:</b> đường cong −ln(p). Chấm đỏ là điểm “tung đồng xu” p = 0,5 cho loss 0,6931. Bên phải chấm đỏ là vùng mô hình đã học; bên trái là vùng tự tin nhưng sai. Điều này giải thích cả bệnh NaN ở mục 2.4: khi p chạm sát 0 hoặc 1, log đi tới vô cực.</figcaption>
+</figure>
+
+<!-- ============ 2.2 ============ -->
+<h3 id="s22">2.2 Bảng chẩn đoán, mang vào phòng thi được</h3>
+<blockquote class="src">
+<table>
+<tr><th>Triệu chứng</th><th>Bệnh có thể có</th><th>Sửa ở đâu</th></tr>
+<tr><td>Loss đứng yên ở 0,693</td><td>tốc độ học quá nhỏ; khởi tạo bằng 0; dữ liệu vào toàn số 0</td><td>tăng tốc độ học ×100; kiểm khởi tạo bằng mục 2.4</td></tr>
+<tr><td>Loss nhảy dựng rồi dao động</td><td>tốc độ học quá lớn</td><td>giảm ×10 tới khi đường cong mượt; thêm lịch giảm</td></tr>
+<tr><td>Loss thành NaN</td><td>chia cho 0 hoặc log 0 trong hàm mất mát tự viết; giá trị tràn số</td><td>dùng <code>BCEWithLogitsLoss</code> thay vì tự ghép sigmoid với log</td></tr>
+<tr><td>Học giảm, kiểm tăng</td><td>quá khớp</td><td>dừng sớm; giảm sức chứa; thêm dữ liệu; Dropout hoặc điều chuẩn</td></tr>
+<tr><td>Học về 0, kiểm tăng rất nhanh</td><td>quên <code>zero_grad</code>; rò rỉ nhãn</td><td>kiểm vòng lặp huấn luyện trước khi kiểm mô hình</td></tr>
+<tr><td>Kết quả đổi giữa hai lần chạy</td><td>lần chạy đang phân kỳ; chưa cố định seed; chưa ghim luồng</td><td>xem mục 2.5, và đừng đọc chênh lệch nhỏ hơn độ dao động ấy</td></tr>
+</table>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Đây là “sổ tay cấp cứu” gấp gọn: nhìn triệu chứng (cột 1) → nghĩ tới vài nguyên nhân (cột 2) → làm đúng một thao tác (cột 3). Trong phòng thi bạn không có thời gian suy luận từ đầu.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p><b>Vì sao “tăng ×100” mà “giảm ×10”?</b> Khi loss đứng yên, bước đi quá nhỏ nên cần nhảy cả hai bậc độ lớn để thấy phản ứng; khi loss dao động, ta đã gần vùng tốt nên chỉ cần giảm dần từng bậc cho tới khi mượt. <b>Lịch giảm</b> (<i>learning-rate schedule</i>) cho phép bắt đầu lớn rồi giảm để hội tụ ổn định.</p>
+<p><b>Dropout / điều chuẩn:</b> Dropout tắt ngẫu nhiên nơ-ron lúc huấn luyện để mạng không phụ thuộc vào vài nơ-ron; “điều chuẩn” (regularization, ví dụ weight decay) phạt trọng số lớn. <b>Rò rỉ nhãn kiểm:</b> nếu thông tin của tập kiểm định lọt vào lúc huấn luyện thì kiểm định đẹp giả tạo.</p>
+<p><b>Lưu ý đọc bảng:</b> file PDF gộp ô nên ở dòng “Học về 0, kiểm tăng rất nhanh” việc tách chữ “kiểm” giữa cột 2 và cột 3 là suy ra từ ngữ pháp (cột 3 luôn bắt đầu bằng động từ: “kiểm vòng lặp huấn luyện…”). Hai mục “mục 2.4” ở hàng 1 và ở chú thích Hình 1 thực ra nói về nội dung mục 2.3 (xem phần ghi chú rà soát cuối trang).</p></div>
+
+<!-- ============ 2.3 ============ -->
+<h3 id="s23">2.3 Hai bệnh, một đường cong</h3>
+<blockquote class="src">
+<p>Ô tốc độ học quá nhỏ và ô khởi tạo bằng 0 cho hai đường thẳng nằm ngang ở cùng độ cao. Đường cong không phân biệt được chúng, nên phải mở mạng ra mà nhìn:</p>
+<table>
+<tr><th></th><th class="n">∥gradient∥</th><th class="n">Độ lệch chuẩn của trọng số</th><th class="n">Số giá trị ẩn khác nhau</th></tr>
+<tr><td>tốc độ học quá nhỏ</td><td class="n">3,978 · 10<sup>−2</sup></td><td class="n">3,332 · 10<sup>−2</sup></td><td class="n">128</td></tr>
+<tr><td>khởi tạo bằng 0</td><td class="n">1,562 · 10<sup>−2</sup></td><td class="n">0</td><td class="n">1</td></tr>
+</table>
+<p>Khởi tạo bằng 0 làm cả 128 nơ ron ẩn giống hệt nhau, nên chúng nhận cùng một gradient và mãi mãi giống nhau: mạng 128 nơ ron thực chất chỉ có một. Còn ở ca tốc độ học quá nhỏ thì trọng số vẫn đa dạng và gradient vẫn có, chỉ là bước đi 10<sup>−8</sup> nên sau 60 vòng nó chưa đi được tới đâu.</p>
+<p><b>Hai phép đo mất ba dòng code và phân biệt được hai bệnh</b></p>
+<pre><code>w = torch.cat([p.detach().ravel() for p in mo.parameters()])
+print("do lech trong so:", float(w.std())) # 0 means dead by init
+an = mo[0](Xh[:64])[0]
+print("gia tri an khac nhau:", int(torch.unique(an.round(decimals=6)).numel()))</code></pre>
+<p>Chạy hai dòng này trước khi huấn luyện, không phải sau khi đã mất mười lăm phút.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p><b>Khởi tạo bằng 0</b> giống 128 học sinh được phát cùng một đề, cùng một đáp án, cùng một cách chấm: dù có 128 người, họ luôn làm y hệt nhau nên lớp chỉ hơn một học sinh duy nhất. Nếu chỉ khác nhau chút xíu lúc đầu thì mỗi người mới đi một hướng. <b>Tốc độ học quá nhỏ</b> lại giống một người đi bộ đúng hướng nhưng mỗi bước dài một phần tỉ mét: đúng đường, chỉ là chưa tới đâu.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p><b>Tính đối xứng (symmetry):</b> khi mọi trọng số của tầng ẩn bằng nhau, nơ-ron ẩn i và j tính cùng một đầu ra; theo quy tắc chuỗi, gradient truyền về chúng cũng bằng nhau, nên sau mỗi bước cập nhật chúng vẫn bằng nhau. Không gì phá được đối xứng. Vì thế cần khởi tạo <b>ngẫu nhiên</b> (Xavier/He) để phá đối xứng.</p>
+<p><b>Cách đọc hai phép đo:</b> (i) độ lệch chuẩn trọng số = 0 → chết ngay từ khởi tạo; &gt; 0 (ở đây 3,332·10<sup>−2</sup>) → trọng số đa dạng. (ii) số giá trị ẩn khác nhau = 1 (mọi nơ-ron ẩn cho cùng một đầu ra) so với 128 (nơ-ron nào cũng khác nhau). Gradient thì cả hai ca đều <b>khác 0</b>: vì vậy “gradient khác 0” không đủ để kết luận mạng đang khoẻ.</p>
+<p><b>Trong code:</b> <code>mo.parameters()</code> gom mọi tham số; <code>.detach().ravel()</code> gỡ khỏi đồ thị tính toán và trải phẳng; <code>mo[0]</code> là tầng Linear đầu tiên (nếu <code>mo</code> là <code>nn.Sequential</code>); <code>Xh[:64]</code> là 64 mẫu đầu; <code>[0]</code> lấy mẫu đầu tiên; <code>torch.unique(...)</code> đếm số giá trị phân biệt sau khi làm tròn 6 chữ số để bỏ sai số dấu phẩy động.</p></div>
+
+<figure>
+<svg viewBox="0 0 560 230" role="img" aria-label="Nơ-ron ẩn giống nhau và khác nhau">
+<style>.t{font:12px sans-serif;fill:#1a2233}</style>
+<text class="t" x="10" y="22" style="font-weight:bold">Khởi tạo bằng 0 → mọi nơ-ron ẩn giống hệt (số giá trị ẩn khác nhau = 1)</text>
+<g fill="#f4b183" stroke="#c0392b" stroke-width="1.5">
+<circle cx="40" cy="60" r="16"/><circle cx="110" cy="60" r="16"/><circle cx="180" cy="60" r="16"/><circle cx="250" cy="60" r="16"/><circle cx="320" cy="60" r="16"/><circle cx="390" cy="60" r="16"/><circle cx="460" cy="60" r="16"/></g>
+<text class="t" x="490" y="64">… (128 cái)</text>
+<text class="t" x="10" y="130" style="font-weight:bold">Tốc độ học quá nhỏ → nơ-ron ẩn đa dạng nhưng bước đi 10<tspan dy="-5" font-size="9">−8</tspan><tspan dy="5"> chưa tới đâu</tspan></text>
+<g stroke="#1f4e79" stroke-width="1.5">
+<circle cx="40" cy="170" r="16" fill="#cfe2f3"/><circle cx="110" cy="170" r="16" fill="#9fc5e8"/><circle cx="180" cy="170" r="16" fill="#e1d5f0"/><circle cx="250" cy="170" r="16" fill="#b6d7a8"/><circle cx="320" cy="170" r="16" fill="#ffe599"/><circle cx="390" cy="170" r="16" fill="#f9cb9c"/><circle cx="460" cy="170" r="16" fill="#d5a6bd"/></g>
+<text class="t" x="490" y="174">… (128 cái)</text>
+<text class="t" x="10" y="216" style="fill:#5b667a">Màu giống nhau = cùng giá trị ẩn; màu khác nhau = giá trị ẩn khác nhau.</text>
+</svg>
+<figcaption><b>Mô tả:</b> hàng trên là ca “khởi tạo bằng 0” (mọi nơ-ron cùng màu, tương ứng “1 giá trị ẩn khác nhau”); hàng dưới là ca “tốc độ học quá nhỏ” (mỗi nơ-ron một màu, tương ứng “128 giá trị ẩn khác nhau”). Hai ca cho cùng một đường thẳng loss nhưng bệnh khác hẳn nhau.</figcaption>
+</figure>
+
+<!-- ============ 2.4 ============ -->
+<h3 id="s24">2.4 NaN không đến từ tốc độ học, ít nhất là không phải ở đây</h3>
+<blockquote class="src">
+<p>Câu truyền miệng phổ biến là “loss ra NaN thì giảm tốc độ học”. Tôi đem thử:</p>
+<table>
+<tr><th>Adam, tốc độ học</th><th class="n">Loss vòng đầu</th><th class="n">Học cuối</th><th>Có NaN không</th></tr>
+<tr><td class="n">5</td><td class="n">10,4209</td><td class="n">0,5871</td><td>không</td></tr>
+<tr><td class="n">100</td><td class="n">2803,6064</td><td class="n">2,8528</td><td>không</td></tr>
+<tr><td class="n">100 000</td><td class="n">3,44 · 10<sup>9</sup></td><td class="n">6877,2207</td><td>không</td></tr>
+</table>
+<p>Tốc độ học gấp trăm nghìn lần bình thường vẫn không sinh ra NaN, vì Adam chuẩn hoá bước đi theo độ lớn gradient, còn <code>BCEWithLogitsLoss</code> tính log-sum-exp một cách ổn định.</p>
+<p>Cái thật sự sinh ra NaN là hàm mất mát tự viết theo kiểu hiển nhiên nhất:</p>
+<pre><code>def bce_tho(z, y):
+    """Binary cross entropy written the obvious way, with nothing guarding log(0)."""
+    p = torch.sigmoid(z)
+    return -(y * torch.log(p) + (1 - y) * torch.log(1 - p)).mean()</code></pre>
+<p>Khi mô hình bắt đầu tự tin, σ(z) chạm đúng 1,0 trong dấu phẩy động, rồi log(1 − 1) = log 0 = −∞. Ở lần chạy này nó xảy ra ngay vòng thứ 4.</p>
+<p><b>Đây là ca khó chịu nhất: mô hình đang học tốt thì chết</b></p>
+<p>Nhìn ô cuối của hình: ba vòng đầu loss giảm đều từ 0,3202 xuống 0,0975. Không có dấu hiệu gì báo trước. Rồi vòng thứ tư thành NaN và mọi thứ sau đó vô nghĩa.</p>
+<p>Trong sáu tiếng thi, thứ này giết cả một lượt huấn luyện dài. Cách phòng rẻ hơn cách chữa rất nhiều: dùng hàm mất mát có sẵn của thư viện, và nếu bắt buộc phải tự viết thì kẹp p vào khoảng [10<sup>−12</sup>; 1 − 10<sup>−12</sup>].</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Máy tính chỉ giữ một số chữ số có nghĩa. Giống một chiếc cân điện tử chỉ chính xác đến 1 gam: bạn đặt lên 999,9999 gam nó hiển thị đúng 1000 gam. Khi mạng quá “tự tin” (p = 0,99999999…) máy làm tròn thành đúng 1,0; rồi 1 − 1 = 0 và <b>không ai lấy logarit của 0 được</b> (nó là −∞), kéo theo 0 × ∞ = NaN. Nguyên nhân là làm tròn chứ không phải mô hình “học quá mạnh”.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p><b>Vì sao Adam không nổ NaN?</b> Bước cập nhật của Adam ≈ lr · m̂/(√v̂ + ε), tức đã chia cho độ lớn gradient nên mỗi bước mỗi trọng số chỉ di chuyển cỡ lr, không tỉ lệ với gradient. Loss có thể rất lớn (10<sup>9</sup>) nhưng vẫn là số hữu hạn. <b>Vì sao <code>BCEWithLogitsLoss</code> an toàn?</b> Nó gộp sigmoid và log thành <i>log-sum-exp trick</i>: loss = max(z,0) − z·y + ln(1 + e<sup>−|z|</sup>), không bao giờ tính trực tiếp log(0).</p>
+<p><b>Điểm cần cẩn thận về ngưỡng kẹp:</b> với số thực 32 bit (mặc định của PyTorch), khoảng cách nhỏ nhất quanh 1 là cỡ 6·10<sup>−8</sup>, nên 1 − 10<sup>−12</sup> khi ép về float32 sẽ bị làm tròn lại thành đúng 1,0 và vẫn dính log 0. Ngưỡng 10<sup>−12</sup> chỉ có ý nghĩa với float64 (cỡ 10<sup>−16</sup>); với float32 nên dùng ε cỡ 10<sup>−7</sup> hoặc tốt nhất dùng hàm loss có sẵn. (Đây là phân tích của mình, hãy tự kiểm ở Bài tập 4.)</p></div>
+
+<figure>
+<svg viewBox="0 0 560 210" role="img" aria-label="Chuỗi nguyên nhân dẫn đến NaN">
+<style>.t{font:12px sans-serif;fill:#1a2233}.b{fill:#f7f9fd;stroke:#1f4e79;stroke-width:1.5}.r{fill:#fdeeee;stroke:#c0392b;stroke-width:1.5}</style>
+<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1f4e79"/></marker></defs>
+<rect class="b" x="5" y="20" width="100" height="56" rx="8"/><text class="t" x="15" y="44">Mô hình tự tin</text><text class="t" x="15" y="62">z rất lớn</text>
+<rect class="b" x="150" y="20" width="110" height="56" rx="8"/><text class="t" x="160" y="44">σ(z) làm tròn</text><text class="t" x="160" y="62">thành đúng 1,0</text>
+<rect class="b" x="305" y="20" width="110" height="56" rx="8"/><text class="t" x="315" y="44">1 − p = 0</text><text class="t" x="315" y="62">log 0 = −∞</text>
+<rect class="r" x="450" y="20" width="100" height="56" rx="8"/><text class="t" x="465" y="44">0 × (−∞)</text><text class="t" x="465" y="62">= NaN</text>
+<path d="M105,48 L148,48 M260,48 L303,48 M415,48 L448,48" stroke="#1f4e79" stroke-width="2" marker-end="url(#ar)"/>
+<rect x="5" y="110" width="545" height="84" rx="8" fill="#eef8f1" stroke="#2e8b57"/>
+<text class="t" x="16" y="134" style="font-weight:bold">Cách phòng (rẻ hơn cách chữa):</text>
+<text class="t" x="16" y="156">1) Dùng BCEWithLogitsLoss (log-sum-exp, ổn định số học).</text>
+<text class="t" x="16" y="176">2) Nếu tự viết: kẹp p vào [ε; 1 − ε] với ε hợp với kiểu số (float32 ≠ float64).</text>
+</svg>
+<figcaption><b>Mô tả:</b> chuỗi bốn bước từ “mô hình tự tin” đến NaN, và hai cách phòng. Điểm mấu chốt: nguyên nhân là sai số làm tròn trong hàm loss tự viết, không phải tốc độ học.</figcaption>
+</figure>
+
+<!-- ============ 2.5 ============ -->
+<h3 id="s25">2.5 Kết quả nhảy giữa hai lần chạy cũng là một triệu chứng</h3>
+<blockquote class="src">
+<p>Thí nghiệm: chuẩn bị đúng bộ đặc trưng ấy hai lần, một lần cho thư viện đại số dùng một luồng, một lần cho dùng bốn luồng. Nhãn giống hệt nhau, còn đặc trưng lệch nhau nhiều nhất 3,725 · 10<sup>−9</sup>, tức là lệch ở mức làm tròn chứ không phải lệch về nội dung.</p>
+<p>Rồi huấn luyện y hệt trên cả hai bộ:</p>
+<table>
+<tr><th>Ca bệnh</th><th class="n">Kiểm cuối, bộ A</th><th class="n">Kiểm cuối, bộ B</th><th class="n">Lệch</th></tr>
+<tr><td>khoẻ mạnh</td><td class="n">0,3104</td><td class="n">0,3091</td><td class="n">0,0013</td></tr>
+<tr><td>tốc độ học quá lớn</td><td class="n">0,6329</td><td class="n">0,7871</td><td class="n">0,1541</td></tr>
+<tr><td>tốc độ học quá nhỏ</td><td class="n">0,6938</td><td class="n">0,6938</td><td class="n">0</td></tr>
+<tr><td>khởi tạo bằng 0</td><td class="n">0,6908</td><td class="n">0,6908</td><td class="n">0</td></tr>
+<tr><td>quá khớp</td><td class="n">0,6889</td><td class="n">0,6890</td><td class="n">0,0001</td></tr>
+<tr><td>quên <code>zero_grad</code></td><td class="n">3,6912</td><td class="n">3,6912</td><td class="n">0</td></tr>
+</table>
+<p>Một nhiễu loạn 3,7 · 10<sup>−9</sup> ở đầu vào bị lần chạy phân kỳ khuếch đại thành 0,1541 ở kết quả, gấp 121 lần mức mà lần chạy khoẻ mạnh nhúc nhích. Lấy hai con số đã làm tròn trong bảng mà chia thì ra 118; tỉ số thật tính từ số chưa làm tròn là 121.</p>
+<p><b>Cách dùng con số này trong phòng thi</b></p>
+<p>Nếu đổi một thứ vô hại mà điểm nhảy nhiều, đừng đi tìm ý nghĩa của cú nhảy. Hãy đọc nó thành: lần chạy này không ổn định, và đi sửa tốc độ học trước đã.</p>
+<p>Đây cũng là lý do file <code>benh-loss.py</code> gọi <code>torch.set_num_threads(1)</code> và ghim luồng cho thư viện đại số. Không ghim thì cùng một mã, cùng một seed, chạy trên máy 8 luồng cho ra bảng khác máy 1 luồng, và cả buổi học này sống bằng những con số cụ thể. Buổi 10 đã gặp đúng chuyện ấy với t-SNE.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Hiệu ứng cánh bướm: trên một con đường thẳng, lệch nửa milimét lúc xuất phát vẫn đến đúng nơi; nhưng trên con đường trơn trượt đầy khúc cua (lần chạy phân kỳ), lệch nửa milimét thôi cũng đưa bạn xuống một thung lũng khác. Vì vậy: nếu điểm số “nhảy” chỉ vì một thay đổi vô hại, hãy nghi <b>con đường</b> chứ đừng nghi <b>bước chân</b>.</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p><b>Nguồn nhiễu:</b> phép nhân ma trận đa luồng cộng các số theo thứ tự khác nhau; do dấu phẩy động không có tính kết hợp ((a+b)+c ≠ a+(b+c)), kết quả lệch ở mức ~10<sup>−9</sup>. Ở lần chạy khoẻ nhiễu này bị “nén lại” (lệch chỉ 0,0013); ở lần chạy phân kỳ nó bị “khuếch đại” theo hàm mũ (lệch 0,1541).</p>
+<p><b>Đọc bảng:</b> ba dòng có “Lệch = 0” (lr quá nhỏ, khởi tạo 0, quên <code>zero_grad</code>) là những ca kẹt cứng/xác định, không nhạy với nhiễu. Ca “quên zero_grad” không đổi giữa hai bộ, nghĩa là bệnh nằm ở logic vòng lặp, không ở độ ổn định số học. Tỉ số: 0,1541/0,0013 ≈ 118 (làm tròn) và 121 (từ số chưa làm tròn), khớp với lời văn bài giảng.</p>
+<p><b>Ghim luồng:</b> <code>torch.set_num_threads(1)</code> cùng biến môi trường của thư viện đại số (như <code>OMP_NUM_THREADS</code>, <code>MKL_NUM_THREADS</code>, <code>OPENBLAS_NUM_THREADS</code>) đặt <b>trước khi</b> nạp thư viện; việc này gắn với nguyên tắc reproducibility (tái lập) mà cả khoá đã nhấn mạnh.</p></div>
+
+<figure>
+<svg viewBox="0 0 560 190" role="img" aria-label="So sánh độ lệch giữa hai bộ đặc trưng">
+<style>.t{font:12px sans-serif;fill:#1a2233}</style>
+<text class="t" x="10" y="22" style="font-weight:bold">Cùng một nhiễu đầu vào 3,7·10<tspan dy="-5" font-size="9">−9</tspan><tspan dy="5">, độ lệch kết quả (Kiểm cuối):</tspan></text>
+<text class="t" x="10" y="66">khoẻ mạnh</text><rect x="150" y="50" width="3" height="22" fill="#2e8b57"/><text class="t" x="160" y="66">0,0013</text>
+<text class="t" x="10" y="116">tốc độ học quá lớn</text><rect x="150" y="100" width="300" height="22" fill="#c0392b"/><text class="t" x="458" y="116">0,1541</text>
+<text class="t" x="10" y="160" style="fill:#5b667a">Tỉ số ≈ 121 lần: lần chạy phân kỳ khuếch đại nhiễu; lần chạy khoẻ thì nén nhiễu.</text>
+</svg>
+<figcaption><b>Mô tả:</b> hai thanh ngang đặt cạnh nhau cho thấy độ lệch của ca khoẻ mạnh (rất ngắn) so với ca tốc độ học quá lớn (dài gấp khoảng 121 lần). Thanh dài chính là dấu hiệu “lần chạy này không ổn định”.</figcaption>
+</figure>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3">3. Bài tập mẫu</h2>
+<blockquote class="src">
+<p><b>Đề.</b> Cho năm đường cong loss hỏng, gọi tên bệnh và nói sửa ở đâu.</p>
+<p><b>Cách làm.</b> Đọc theo đúng thứ tự này, mỗi câu hỏi loại bỏ được vài khả năng:</p>
+<ol>
+<li>Đường cong có chết không? Có NaN thì đi thẳng tới hàm mất mát, không cần xem gì khác.</li>
+<li>Loss huấn luyện có giảm không? Không giảm thì bệnh nằm ở tối ưu hoặc khởi tạo, chưa phải chuyện tổng quát hoá.</li>
+<li>Nó giảm mượt hay giảm giật? Giật là tốc độ học quá lớn.</li>
+<li>Kiểm định đi theo hay tách ra? Tách ra là quá khớp, tách ra rất nhanh là lỗi trong vòng lặp huấn luyện.</li>
+<li>Kiểm định thấp nhất ở vòng nào? Vòng ấy là chỗ đáng dừng sớm.</li>
+</ol>
+<p>Áp vào bảng mục 2.1: ca khoẻ mạnh chạm đáy 0,2994 ở giữa đường rồi bò lên 0,3104. Nghĩa là ngay cả lần chạy khoẻ cũng đã quá khớp nhẹ ở cuối, và dừng sớm ở đúng vòng chạm đáy lấy lại được 0,0109 mà không tốn thêm gì.</p>
+<p><b>Trả lời câu hỏi buổi 12 để lại</b></p>
+<p>Khoảng cách 0,0868 của MLP ở buổi 12 là quá khớp, tức dòng thứ tư của bảng chẩn đoán. Thứ tự nên thử: dừng sớm trước, vì nó rẻ nhất và không cần huấn luyện lại; rồi giảm sức chứa; rồi Dropout. Buổi 14 sẽ đo từng cách một trên chính bộ dữ liệu này.</p>
+</blockquote>
+
+<figure>
+<svg viewBox="0 0 640 380" role="img" aria-label="Sơ đồ năm câu hỏi chẩn đoán">
+<style>.t{font:12.5px sans-serif;fill:#1a2233}.q{fill:#f7f9fd;stroke:#1f4e79;stroke-width:1.5}.o{fill:#fff8e6;stroke:#e0a800;stroke-width:1.5}</style>
+<defs><marker id="ar2" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#1f4e79"/></marker></defs>
+<g>
+<rect class="q" x="10" y="10" width="330" height="50" rx="8"/><text class="t" x="20" y="40">1. Đường cong có chết không? (NaN)</text>
+<rect class="o" x="380" y="10" width="250" height="50" rx="8"/><text class="t" x="390" y="40">→ đi thẳng tới hàm mất mát</text>
+<rect class="q" x="10" y="85" width="330" height="50" rx="8"/><text class="t" x="20" y="115">2. Loss huấn luyện có giảm không?</text>
+<rect class="o" x="380" y="85" width="250" height="50" rx="8"/><text class="t" x="390" y="108">→ không: bệnh ở tối ưu/khởi tạo</text><text class="t" x="390" y="126">(lr nhỏ, init 0)</text>
+<rect class="q" x="10" y="160" width="330" height="50" rx="8"/><text class="t" x="20" y="190">3. Giảm mượt hay giảm giật?</text>
+<rect class="o" x="380" y="160" width="250" height="50" rx="8"/><text class="t" x="390" y="190">→ giật: tốc độ học quá lớn</text>
+<rect class="q" x="10" y="235" width="330" height="50" rx="8"/><text class="t" x="20" y="265">4. Kiểm định đi theo hay tách ra?</text>
+<rect class="o" x="380" y="235" width="250" height="50" rx="8"/><text class="t" x="390" y="258">→ tách: quá khớp;</text><text class="t" x="390" y="276">tách rất nhanh: lỗi vòng lặp</text>
+<rect class="q" x="10" y="310" width="330" height="50" rx="8"/><text class="t" x="20" y="340">5. Kiểm định thấp nhất ở vòng nào?</text>
+<rect class="o" x="380" y="310" width="250" height="50" rx="8"/><text class="t" x="390" y="340">→ vòng đó: chỗ đáng dừng sớm</text>
+<path d="M340,35 L378,35 M340,110 L378,110 M340,185 L378,185 M340,260 L378,260 M340,335 L378,335" stroke="#1f4e79" stroke-width="2" marker-end="url(#ar2)"/>
+<path d="M175,60 L175,83 M175,135 L175,158 M175,210 L175,233 M175,285 L175,308" stroke="#1f4e79" stroke-width="2" marker-end="url(#ar2)"/>
+</g>
+</svg>
+<figcaption><b>Mô tả:</b> năm câu hỏi theo đúng thứ tự (cột trái, mũi tên xuống); mỗi câu cho một “kết luận” ở cột phải. Cách đọc này loại bỏ dần các khả năng nên chẩn đoán trong khoảng 30 giây.</figcaption>
+</figure>
+
+<div class="note brain"><b class="t">🧠 Ẩn dụ đời thường</b>
+<p>Giống bác sĩ đi khám theo thứ tự cố định: còn thở không (NaN?) → tim có đập không (loss có giảm không?) → nhịp đều không (mượt hay giật?) → có “lệch pha” giữa hai bên cơ thể không (huấn luyện vs kiểm định?) → tìm thời điểm tốt nhất để can thiệp (vòng đáy).</p></div>
+<div class="note tech"><b class="t">🔬 Đào sâu kỹ thuật</b>
+<p><b>Dừng sớm (early stopping):</b> lưu trọng số tại vòng có loss kiểm định thấp nhất (ở ca khoẻ mạnh là 0,2994) rồi dừng, thay vì lấy vòng cuối (0,3104). Lãi: 0,3104 − 0,2994 = 0,0110 (bài giảng ghi 0,0109 vì tính từ số chưa làm tròn). <b>Tại sao thứ tự “dừng sớm → giảm sức chứa → Dropout”?</b> Dừng sớm chỉ cần thêm một điều kiện vào vòng lặp, không phải huấn luyện lại; giảm sức chứa phải đổi kiến trúc và chạy lại; Dropout thêm siêu tham số cần điều chỉnh. Ưu tiên cách rẻ nhất trước là tư duy tối ưu thời gian trong kỳ thi 6 tiếng.</p></div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4">4. Bài tập tự làm</h2>
+
+<h3>Bài tập 1. Dựng lại cả bảy đường cong</h3>
+<blockquote class="src">
+<pre><code># python benh-loss.py --hinh --phan-biet --nhay-cam</code></pre>
+<p><b>Cổng kiểm</b></p>
+<p>Bảy dòng của bảng mục 2.1 khớp tới chữ số thập phân thứ tư. Nếu máy bạn cho số khác, hãy kiểm xem <code>torch.set_num_threads(1)</code> có thật sự chạy trước khi mạng được dựng không.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Như dựng lại một thí nghiệm khoa học: chưa khớp số của tác giả thì chưa được tin kết luận của mình. Lệch số ở chữ số thứ tư thường là do số luồng hoặc thứ tự khởi tạo.</div>
+<div class="note tech"><b class="t">🔬</b> Ba cờ dòng lệnh tương ứng ba phần của buổi: <code>--hinh</code> (vẽ bảy ô), <code>--phan-biet</code> (hai phép đo mục 2.3), <code>--nhay-cam</code> (thí nghiệm nhạy cảm mục 2.5). Thứ tự quan trọng: ghim luồng phải chạy <b>trước</b> khi tạo mạng và trước khi nạp thư viện đại số.</div>
+
+<h3>Bài tập 2. Che nhãn rồi tự chẩn đoán</h3>
+<blockquote class="src">
+<p>Đưa hình bảy ô cho một bạn khác, giấu tiêu đề từng ô, rồi bảo bạn ấy gọi tên bệnh.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Đúng ít nhất sáu trên bảy. Hai ô giống nhau thì được tính đúng nếu bạn ấy nói “một trong hai bệnh này, và đây là phép đo để phân biệt”.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Giống trò “đoán bệnh qua phim X-quang đã che tên”: kiểm tra xem người học có nhận ra hình dạng hay chỉ nhớ tiêu đề.</div>
+<div class="note tech"><b class="t">🔬</b> Đáp án đúng cho hai ô phẳng: “tốc độ học quá nhỏ <i>hoặc</i> khởi tạo bằng 0; đo độ lệch chuẩn trọng số và số giá trị ẩn khác nhau (mục 2.3)”. Đó là cách một ca “không phân biệt được” vẫn được coi là trả lời đúng, vì đúng quy trình chẩn đoán.</div>
+
+<h3>Bài tập 3. Tìm ngưỡng tốc độ học</h3>
+<blockquote class="src">
+<p>Với chính mạng ấy, quét tốc độ học từ 10<sup>−5</sup> tới 10<sup>1</sup>, mỗi lần nhân 10, ghi lại loss kiểm định cuối.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Vẽ thành đường cong hình chữ U và chỉ ra vùng nào là quá nhỏ, vùng nào là quá lớn. Đây là cách người ta thật sự chọn tốc độ học, và nó chỉ tốn bảy lần chạy.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Giống chỉnh vòi nước: mở quá nhỏ thì mãi không đầy xô; mở quá to thì nước bắn tung toé. Vặn từng nấc gấp mười lần để tìm vùng vừa.</div>
+<div class="note tech"><b class="t">🔬</b> 10<sup>−5</sup>, 10<sup>−4</sup>, …, 10<sup>1</sup> đúng là <b>7</b> giá trị (khớp “bảy lần chạy”). Thang logarit (mỗi lần ×10) là lựa chọn tự nhiên vì tốc độ học có tác dụng nhân, giống lý do dùng <code>np.logspace</code> cho hệ số C ở các buổi trước. Hình chữ U: nhánh trái (lr quá nhỏ) loss cao vì chưa kịp học, đáy là vùng tốt, nhánh phải (lr quá lớn) loss cao vì dao động/phân kỳ.</div>
+
+<figure>
+<svg viewBox="0 0 620 240" role="img" aria-label="Đường cong chữ U minh hoạ khi quét tốc độ học">
+<style>.t{font:12px sans-serif;fill:#1a2233}</style>
+<rect x="45" y="15" width="180" height="170" fill="#fdeeee"/><rect x="225" y="15" width="170" height="170" fill="#eef8f1"/><rect x="395" y="15" width="180" height="170" fill="#fff8e6"/>
+<line x1="45" y1="185" x2="575" y2="185" stroke="#9aa5b8"/><line x1="45" y1="15" x2="45" y2="185" stroke="#9aa5b8"/>
+<path d="M50,40 L135,42 L220,75 L305,150 L390,135 L475,70 L560,35" fill="none" stroke="#1f4e79" stroke-width="2.5"/>
+<g fill="#1f4e79"><circle cx="50" cy="40" r="4"/><circle cx="135" cy="42" r="4"/><circle cx="220" cy="75" r="4"/><circle cx="305" cy="150" r="4"/><circle cx="390" cy="135" r="4"/><circle cx="475" cy="70" r="4"/><circle cx="560" cy="35" r="4"/></g>
+<g class="t"><text x="42" y="203">1e-5</text><text x="125" y="203">1e-4</text><text x="210" y="203">1e-3</text><text x="295" y="203">1e-2</text><text x="380" y="203">1e-1</text><text x="470" y="203">1</text><text x="552" y="203">10</text></g>
+<text class="t" x="70" y="30" style="fill:#c0392b">quá nhỏ</text><text class="t" x="275" y="30" style="fill:#2e8b57">vùng tốt</text><text class="t" x="450" y="30" style="fill:#b8860b">quá lớn</text>
+<text class="t" x="150" y="228" style="fill:#5b667a">Hình dạng minh hoạ (schematic), không phải kết quả thật. Trục ngang: tốc độ học; trục dọc: loss kiểm định cuối.</text>
+</svg>
+<figcaption><b>Mô tả:</b> dạng chữ U mà Bài tập 3 mong đợi: bảy điểm ứng với bảy tốc độ học; vùng đỏ bên trái (quá nhỏ, loss gần mốc 0,693), vùng xanh ở giữa (đáy), vùng vàng bên phải (quá lớn). Số liệu thật là việc bạn phải tự chạy.</figcaption>
+</figure>
+
+<h3>Bài tập 4. Bắt NaN sớm hơn</h3>
+<blockquote class="src">
+<p>Thêm vào vòng lặp huấn luyện một phép kiểm dừng ngay khi loss không còn hữu hạn, in ra số vòng và giá trị lớn nhất của |z| tại thời điểm ấy.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Phải dừng đúng ở vòng 4. Rồi kẹp p lại và chạy tiếp: mô hình phải học được tới cuối, và bạn ghi lại loss kiểm định cuối để so với ca khoẻ mạnh.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Giống lắp cầu dao chống giật: ngắt điện ngay khi có sự cố và ghi lại hiện trường, chứ đừng để chạy tiếp 15 phút rồi mới biết đã hỏng.</div>
+<div class="note tech"><b class="t">🔬</b> Dùng <code>torch.isfinite(loss)</code> (đúng cho cả NaN lẫn ±∞). In ra <code>z.abs().max()</code> để thấy z lớn cỡ nào thì σ(z) chạm 1,0. Khi mình thử riêng phép tính σ(z) trong float32 bằng NumPy thì σ(z) thành đúng 1,0 từ z ≈ 17 trở lên; giá trị |z| thật ở vòng 4 là thứ bạn phải tự in ra và đối chiếu. Về việc kẹp p, xem lưu ý về float32 ở mục 2.4: nếu dùng 1 − 10<sup>−12</sup> mà vẫn NaN thì đó là nguyên nhân. Nhớ rằng đánh số vòng bắt đầu từ 0 hay từ 1 quyết định “vòng 4” là vòng nào (xem ghi chú rà soát).</div>
+
+<h3>Bài tập 5. Tự viết bảng chẩn đoán của riêng bạn</h3>
+<blockquote class="src">
+<p>Một trang, sáu dòng trở lên, viết tay hoặc in ra và mang vào phòng thi.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Mỗi dòng phải có đủ ba cột: triệu chứng nhìn thấy được, bệnh, và thao tác cụ thể chứ không phải lời khuyên chung chung. “Điều chỉnh siêu tham số” không phải một thao tác; “giảm tốc độ học mười lần rồi chạy lại 10 vòng” thì có.</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Tự viết sổ tay thì nhớ lâu hơn chép của người khác: mỗi dòng bạn viết là một lần bạn đã tự suy luận.</div>
+<div class="note tech"><b class="t">🔬</b> Một thao tác tốt có ba đặc điểm: <b>hành động</b> (giảm, tăng, thêm, kiểm), <b>độ lớn</b> (×10, ×100), <b>tiêu chí dừng</b> (chạy lại 10 vòng, tới khi mượt). Có thể mở rộng thêm các dòng như: “loss kiểm định thấp hơn loss huấn luyện”, “chính xác 50% trên tập cân bằng”, “gradient toàn 0”, để đủ sáu dòng trở lên.</div>
+
+<h3>Chuẩn bị cho buổi sau</h3>
+<blockquote class="src">
+<p>Buổi 14 dựng một mô hình PyTorch nộp được cho tác vụ 1, viết vòng huấn luyện bằng tay, và sống trong giới hạn 20 phút của quy chế tái lập. Bốn cách chống quá khớp sẽ được đo ngay tại đó. Mang theo câu hỏi: trong bốn cách ấy, cách nào lấy lại được nhiều nhất trong khoảng 0,0868 của buổi 12, và cách nào tốn ít thời gian chạy nhất?</p>
+</blockquote>
+<div class="note brain"><b class="t">🧠</b> Giống chọn thuốc: cần biết thuốc nào công hiệu nhất và thuốc nào rẻ, nhanh nhất, rồi cân bằng theo ngân sách thời gian 20 phút.</div>
+<div class="note tech"><b class="t">🔬</b> Hai tiêu chí cần đo: <b>hiệu quả</b> = phần của khoảng cách 0,0868 mà mỗi cách lấy lại được; <b>chi phí</b> = thời gian chạy thêm. Cách chống quá khớp đã nhắc: dừng sớm, giảm sức chứa, thêm dữ liệu, Dropout/điều chuẩn.</div>
+
+<!-- ============ ghi chú ============ -->
+<h2 id="s5">Ghi chú rà soát (Claude thêm, không thuộc bài giảng gốc)</h2>
+<div class="note warn"><b class="t">⚠️ Bốn điểm nên hỏi lại hoặc tự kiểm</b>
+<p><b>1. Tham chiếu mục sai (khả năng cao).</b> Chú thích Hình 1 và bảng 2.2 đều viết “mục 2.4” để phân biệt hai ô phẳng và kiểm khởi tạo; nhưng nội dung đó nằm ở <b>mục 2.3</b> (“Hai bệnh, một đường cong”). Mục 2.4 nói về NaN.</p>
+<p><b>2. Ngưỡng kẹp 10<sup>−12</sup> với float32.</b> Khi ép 1 − 10<sup>−12</sup> về float32 nó thành 1,0 nên kẹp kiểu này chưa chắc chặn được log 0 (đúng với float64). Đây là phân tích của mình chưa chạy trên mã của thầy, nên hãy kiểm khi làm Bài tập 4.</p>
+<p><b>3. Đánh số “vòng 4”.</b> Bảng và hình ghi vòng hỏng là 4 (nếu đánh số từ 0 thì đây là vòng thứ năm), còn lời văn viết “ba vòng đầu… rồi vòng thứ tư thành NaN”. Hai cách đếm này chỉ khớp nếu tính “vòng 4” theo quy ước của <code>benh-loss.py</code>; hãy đối chiếu khi làm cổng kiểm “phải dừng đúng ở vòng 4”.</p>
+<p><b>4. Làm tròn.</b> 0,3104 − 0,2994 = 0,0110 nhưng bài giảng ghi 0,0109; và 0,7871 − 0,6329 = 0,1542 nhưng bảng ghi 0,1541. Cả hai là hệ quả của việc tính từ số chưa làm tròn, không phải lỗi.</p></div>
+
+</main>
+</body>
+</html>
