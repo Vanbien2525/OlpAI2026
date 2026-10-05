@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luyện Olympic AI – Buổi 14: PyTorch trên CPU, trong giới hạn 20 phút</title>
+<style>
+:root{--bg:#fff;--ink:#1f2937;--mut:#6b7280;--acc:#2563eb;--q:#eff6ff;--qb:#2563eb;--a:#fffbeb;--ab:#f59e0b;--t:#ecfdf5;--tb:#10b981;--ln:#e5e7eb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 -apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:36px 20px;border-bottom:3px solid var(--acc);background:#f8fafc;text-align:center}
+header h1{margin:0 0 6px;font-size:28px;color:var(--acc)}
+header p{margin:2px 0;color:var(--mut)}
+main{max-width:920px;margin:0 auto;padding:10px 20px 60px}
+h2{margin-top:44px;padding-bottom:6px;border-bottom:2px solid var(--ln);color:#111827}
+h3{margin-top:30px;color:var(--acc)}
+blockquote{margin:14px 0;padding:10px 16px;background:var(--q);border-left:5px solid var(--qb);border-radius:0 8px 8px 0}
+blockquote p{margin:6px 0}
+.gv{background:var(--a);border-left:5px solid var(--ab);padding:10px 16px;border-radius:0 8px 8px 0;margin:10px 0 22px}
+.tk{background:var(--t);border-left:5px solid var(--tb);padding:10px 16px;border-radius:0 8px 8px 0;margin:10px 0 22px}
+.gv b.h,.tk b.h{display:block;margin-bottom:4px}
+pre{background:#f3f4f6;border:1px solid var(--ln);border-radius:8px;padding:12px;overflow-x:auto;font:13.5px/1.5 Consolas,Menlo,monospace;margin:8px 0}
+code{font-family:Consolas,Menlo,monospace;background:#f3f4f6;padding:1px 5px;border-radius:4px;font-size:.92em}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14.5px}
+th,td{border:1px solid var(--ln);padding:6px 9px;text-align:left}
+th{background:#f1f5f9}
+.tw{overflow-x:auto}
+figure{margin:16px 0;padding:12px;border:1px solid var(--ln);border-radius:10px;background:#fff}
+figure svg{width:100%;height:auto;display:block}
+figcaption{font-size:14px;color:var(--mut);margin-top:8px}
+hr{border:0;border-top:1px dashed var(--ln);margin:26px 0}
+footer{text-align:center;color:var(--mut);padding:20px;border-top:1px solid var(--ln)}
+</style>
+</head>
+<body>
+<header>
+<h1>Luyện Olympic Trí tuệ nhân tạo – Buổi 14</h1>
+<p><b>PyTorch trên CPU, trong giới hạn 20 phút</b></p>
+<p>Phần: Học sâu · Phục vụ: chung kết · Ngày 25 tháng 8 năm 2026 · TS. Đỗ Phúc Hảo</p>
+<p style="font-size:13px">Quy ước: <span style="color:#2563eb">khung xanh dương</span> = nguyên văn bài giảng · <span style="color:#d97706">khung vàng 🧠</span> = ẩn dụ đời thường · <span style="color:#059669">khung xanh lá 🔬</span> = đào sâu kỹ thuật</p>
+</header>
+<main>
+
+<h2>1. Mục tiêu</h2>
+<blockquote>
+<p>Huấn luyện xong một mô hình có ích trên CPU, viết vòng huấn luyện bằng tay, và đóng gói đúng theo quy chế: chạy lại ra đúng kết quả cũ, trong dưới 20 phút.</p>
+<p>Buổi này cũng trả lời câu hỏi buổi 13 để lại: trong bốn cách chống quá khớp, cách nào lấy lại được nhiều nhất trong khoảng 0,0868, và cách nào rẻ nhất? Câu trả lời đo được là một câu khó nghe, và mục 2.3 nói thẳng.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Hãy hình dung kỳ thi như một cuộc đua có đồng hồ bấm giờ. Có ba bài kiểm tra cùng lúc: (1) mô hình phải <i>có ích</i> (điểm đủ tốt), (2) phải <i>tái lập</i> (chạy lại ra đúng kết quả, như một công thức nấu ăn ra đúng vị mỗi lần), (3) phải <i>kịp giờ</i> (dưới 1200 giây). Buổi này giống buổi "tập lái xe số sàn": bạn bỏ chế độ tự động của thư viện để tự tay điều khiển từng bước.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+"Khoảng 0,0868" là chênh lệch macro-F1 giữa tập học và tập kiểm định ở buổi 13 (overfitting gap). Macro-F1 là trung bình cộng F1 của từng lớp: <code>F1 = 2·P·R/(P+R)</code>, rồi lấy trung bình không trọng số nên các lớp hiếm cũng được tính ngang lớp phổ biến.</div>
+
+<h2>2. Tóm tắt kiến thức</h2>
+<h3>2.1 Vòng huấn luyện viết ra, không giấu trong thư viện</h3>
+<blockquote>
+<pre><code>mo = mang(d_an, dropout, seed)
+opt = torch.optim.Adam(mo.parameters(), lr=buoc, weight_decay=phat)
+mat = torch.nn.BCEWithLogitsLoss()
+for vong in range(so_vong):
+mo.train()
+thu_tu = torch.randperm(n)
+for i in range(0, n, co_batch):
+idx = thu_tu[i:i + co_batch]
+opt.zero_grad()
+mat(mo(Xh[idx]).ravel(), yh[idx]).backward()
+opt.step()
+mo.eval()
+with torch.no_grad():
+d = f1m(yk.numpy(), (mo(Xk).ravel() &gt; 0).numpy().astype(int))</code></pre>
+<p>Bốn chi tiết trong mười lăm dòng ấy, chi tiết nào thiếu cũng làm hỏng một thứ khác nhau:</p>
+<table><tr><td><code>opt.zero_grad()</code></td><td>thiếu thì gradient cộng dồn, buổi 13 đã đo: kiểm định vọt lên 3,69</td></tr>
+<tr><td><code>mo.train()</code> / <code>mo.eval()</code></td><td>Dropout phải tắt khi đánh giá, nếu không điểm kiểm định là điểm của một mô hình khác</td></tr>
+<tr><td><code>torch.no_grad()</code></td><td>không có thì torch dựng đồ thị đạo hàm cho cả phần đánh giá, tốn bộ nhớ và thời gian vô ích</td></tr>
+<tr><td><code>torch.randperm</code></td><td>thiếu xáo trộn thì mỗi batch là một khối dữ liệu cùng loại, và gradient đi theo hình răng cưa</td></tr></table>
+</blockquote>
+<p style="font-size:13px;color:var(--mut)">Ghi chú: đoạn code trong PDF mất thụt lề khi trích xuất; nội dung dòng giữ nguyên, thụt lề trong <code>for</code> là theo cú pháp Python chuẩn.</p>
+
+<figure>
+<svg viewBox="0 0 860 250" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="13">
+<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#374151"/></marker></defs>
+<rect x="10" y="20" width="130" height="50" rx="8" fill="#dbeafe" stroke="#2563eb"/><text x="75" y="42" text-anchor="middle">mo.train()</text><text x="75" y="58" text-anchor="middle" font-size="11">bật Dropout</text>
+<rect x="175" y="20" width="130" height="50" rx="8" fill="#dbeafe" stroke="#2563eb"/><text x="240" y="42" text-anchor="middle">randperm(n)</text><text x="240" y="58" text-anchor="middle" font-size="11">xáo trộn dữ liệu</text>
+<rect x="340" y="20" width="130" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="405" y="42" text-anchor="middle">zero_grad()</text><text x="405" y="58" text-anchor="middle" font-size="11">xóa gradient cũ</text>
+<rect x="505" y="20" width="150" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="580" y="42" text-anchor="middle">mo(X) → loss</text><text x="580" y="58" text-anchor="middle" font-size="11">forward + backward()</text>
+<rect x="690" y="20" width="150" height="50" rx="8" fill="#fef3c7" stroke="#f59e0b"/><text x="765" y="42" text-anchor="middle">opt.step()</text><text x="765" y="58" text-anchor="middle" font-size="11">cập nhật trọng số</text>
+<path d="M140,45 H175 M305,45 H340 M470,45 H505 M655,45 H690" stroke="#374151" stroke-width="2" marker-end="url(#ar)" fill="none"/>
+<path d="M765,70 V115 H405 V70" stroke="#374151" stroke-width="2" fill="none" marker-end="url(#ar)" stroke-dasharray="5 3"/>
+<text x="585" y="108" text-anchor="middle" font-size="12" fill="#374151">lặp cho từng batch</text>
+<path d="M75,70 V150" stroke="#374151" stroke-width="2" fill="none" marker-end="url(#ar)"/>
+<text x="85" y="130" font-size="12">hết 1 vòng (epoch)</text>
+<rect x="10" y="150" width="130" height="50" rx="8" fill="#d1fae5" stroke="#10b981"/><text x="75" y="172" text-anchor="middle">mo.eval()</text><text x="75" y="188" text-anchor="middle" font-size="11">tắt Dropout</text>
+<rect x="175" y="150" width="200" height="50" rx="8" fill="#d1fae5" stroke="#10b981"/><text x="275" y="172" text-anchor="middle">torch.no_grad()</text><text x="275" y="188" text-anchor="middle" font-size="11">đo macro-F1 trên tập kiểm</text>
+<path d="M140,175 H175" stroke="#374151" stroke-width="2" marker-end="url(#ar)"/>
+<text x="400" y="180" font-size="12" fill="#374151">→ rồi quay lại mo.train() cho vòng kế tiếp</text>
+<text x="430" y="235" text-anchor="middle" font-size="12" fill="#6b7280">Vàng = bước huấn luyện (có gradient) · Xanh lá = bước đánh giá (không gradient)</text>
+</svg>
+<figcaption>Sơ đồ 1: Một vòng (epoch) của vòng huấn luyện viết tay. Vòng ngoài lặp qua các epoch, vòng trong lặp qua các batch.</figcaption></figure>
+
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+<ul>
+<li><b>zero_grad()</b>: như lau bảng trước khi viết bài mới. Không lau thì chữ cũ chồng lên chữ mới, mỗi batch cộng thêm vào gradient của batch trước, bước đi ngày càng lệch (kiểm định 3,69).</li>
+<li><b>train()/eval()</b>: như vận động viên tập có cản trở (đeo tạ) nhưng thi thật thì phải bỏ tạ. Dropout là "tạ" khi tập; quên bỏ khi thi thì bạn đo một người đang đeo tạ.</li>
+<li><b>no_grad()</b>: như đi thi chỉ cần viết đáp án, không cần chép lại nháp từng bước. Torch mặc định lưu "nháp" (đồ thị đạo hàm) để dùng cho backward, mà khi đánh giá thì không có backward.</li>
+<li><b>randperm</b>: như xào bài trước khi chia. Nếu bộ dữ liệu xếp theo lớp, batch toàn lớp 0 rồi toàn lớp 1, mô hình bị kéo qua trái rồi kéo qua phải liên tục (răng cưa).</li>
+</ul></div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+<ul>
+<li><code>BCEWithLogitsLoss</code> gộp sigmoid và binary cross-entropy: <code>L = −[y·log σ(z) + (1−y)·log(1−σ(z))]</code>, ổn định số học hơn tách rời. Vì thế đầu ra mô hình là <i>logit</i> z, và dự đoán lớp 1 khi <code>z &gt; 0</code> (tương đương σ(z) &gt; 0,5), đúng như dòng <code>(mo(Xk).ravel() &gt; 0)</code>.</li>
+<li><code>Adam</code> với <code>weight_decay=phat</code> cộng thêm <code>phat·w</code> vào gradient (điều chuẩn L2, kiểu cổ điển), khác AdamW tách riêng suy giảm trọng số.</li>
+<li><code>backward()</code> <b>cộng dồn</b> (<code>+=</code>) vào <code>.grad</code>, nên cần <code>zero_grad()</code> trước mỗi bước.</li>
+<li>Dropout ở chế độ train: mỗi nơ ron bị tắt với xác suất p và phần còn lại nhân <code>1/(1−p)</code>; ở eval thì không làm gì. Lỗi quên eval() không báo lỗi, chỉ làm điểm nhiễu.</li>
+<li>Chi phí mini-batch: số bước mỗi vòng = <code>⌈n / co_batch⌉</code>.</li>
+</ul></div>
+
+<hr>
+<h3>2.2 Đóng gói theo quy chế</h3>
+<blockquote>
+<p>Quy chế đòi ba thứ, và cả ba đều phải nằm trong file chứ không nằm trong trí nhớ:</p>
+<pre><code>import random
+torch.set_num_threads(1) # buoi 13: thread count changes the result
+def dat_hat_giong(seed=0):
+"""Everything the exam asks to pin, in one place."""
+random.seed(seed)
+np.random.seed(seed)
+torch.manual_seed(seed)</code></pre>
+<p>Ghim luồng không có trong quy chế, nhưng buổi 13 đã đo: cùng seed mà đổi số luồng thì kết quả đổi. Quy chế đòi chạy lại ra đúng kết quả cũ, nên ghim seed là điều kiện cần chứ chưa đủ.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Seed giống như "hạt giống của một ván bài xáo": cùng hạt giống thì bộ bài xáo ra y hệt. Nhưng nếu hai người cùng chia bài mà một người chia bằng 1 tay, người kia bằng 8 tay song song, thứ tự cộng dồn các số có thể khác đi. Đó là lý do ghim luồng: ép chỉ một "tay" chia để thứ tự phép tính cố định.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+Ba thư viện có ba bộ sinh số ngẫu nhiên riêng (<code>random</code>, <code>numpy</code>, <code>torch</code>), nên phải ghim cả ba. Với số thực dấu phẩy động, phép cộng <b>không có tính kết hợp</b>: <code>(a+b)+c ≠ a+(b+c)</code> về mặt làm tròn. Đa luồng chia tổng thành các phần và gộp theo thứ tự có thể thay đổi, nên kết quả lệch ở chữ số cuối, và qua 40 vòng huấn luyện sai lệch ấy khuếch đại thành khác biệt đo được. Hàm này nên gọi <b>một lần ở đầu chương trình</b>, trước khi khởi tạo mạng.</div>
+
+<h3>Ba con số của bài nộp buổi này</h3>
+<blockquote>
+<p>Cả lần chạy, kể cả đọc dữ liệu, dựng đặc trưng, giảm chiều, huấn luyện 40 vòng và ghi file, mất 4,9 giây. Giới hạn quy chế là 1200 giây. Chạy lại lần hai ra đúng những con số ấy.</p>
+<p>Đừng đọc con số 4,9 giây thành “bài này quá nhỏ”. Hãy đọc thành: trong sáu tiếng thi, bạn còn chỗ cho khoảng hai trăm lần thử nghiệm như thế, và đó mới là tài nguyên thật sự khan hiếm.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Giống như một quán ăn: nấu một món mất 5 giây thì bạn có thể thử 200 công thức trong một ca. Thời gian không phải để "tiêu cho đủ", mà là <i>số lần được phép sai và sửa</i>. Ngân sách thật sự là số thí nghiệm.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+Kiểm tra số học: 6 giờ = 21 600 giây; chia 4,9 ≈ 4 400 lần chạy lý thuyết. Con số "khoảng hai trăm" của thầy tính chừa chỗ cho suy nghĩ, viết code, lỗi, nên là ước lượng thực tế hơn con số lý thuyết. Ý chính: thí nghiệm càng rẻ, số vòng lặp "giả thuyết, đo, kết luận" càng nhiều.</div>
+
+<hr>
+<h3>2.3 Cân bốn cách chống quá khớp, và một kết quả khó nghe</h3>
+<blockquote>
+<p>Cùng dữ liệu, cùng seed, cùng 40 vòng. Cột học và cuối là macro-F1 ở vòng cuối; cột tốt nhất là macro-F1 cao nhất mà tập kiểm định từng đạt, tức là điểm mà dừng sớm sẽ lấy được.</p>
+<div class="tw"><table>
+<tr><th>Cách</th><th>Học</th><th>Kiểm cuối</th><th>Tốt nhất</th><th>Vòng tốt</th><th>Giây</th></tr>
+<tr><td>gốc, không chống gì</td><td>0,9443</td><td>0,8781</td><td>0,8866</td><td>31</td><td>2,4</td></tr>
+<tr><td>dừng sớm</td><td>0,9443</td><td>0,8866</td><td>0,8866</td><td>31</td><td>2,4</td></tr>
+<tr><td>sức chứa 32</td><td>0,8743</td><td>0,8580</td><td>0,8580</td><td>39</td><td>1,8</td></tr>
+<tr><td>sức chứa 8</td><td>0,8508</td><td>0,8338</td><td>0,8352</td><td>37</td><td>1,8</td></tr>
+<tr><td>Dropout 0,2</td><td>0,9481</td><td>0,8821</td><td>0,8826</td><td>38</td><td>2,7</td></tr>
+<tr><td>Dropout 0,5</td><td>0,9338</td><td>0,8770</td><td>0,8777</td><td>36</td><td>2,7</td></tr>
+<tr><td>phạt trọng số 10<sup>−4</sup></td><td>0,8995</td><td>0,8636</td><td>0,8747</td><td>38</td><td>9,5</td></tr>
+<tr><td>phạt trọng số 10<sup>−2</sup></td><td>0,7809</td><td>0,7771</td><td>0,7844</td><td>36</td><td>7,5</td></tr>
+</table></div>
+</blockquote>
+
+<figure>
+<svg viewBox="0 0 860 330" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+<text x="430" y="18" text-anchor="middle" font-size="14" font-weight="bold">Macro-F1 kiểm định ở vòng cuối của 8 cấu hình (đường đỏ = bản gốc 0,8781)</text>
+<line x1="60" y1="290" x2="840" y2="290" stroke="#9ca3af"/>
+<g stroke="#e5e7eb"><line x1="60" y1="50" x2="840" y2="50"/><line x1="60" y1="130" x2="840" y2="130"/><line x1="60" y1="210" x2="840" y2="210"/></g>
+<text x="54" y="294" text-anchor="end">0,70</text><text x="54" y="214" text-anchor="end">0,78</text><text x="54" y="134" text-anchor="end">0,86</text><text x="54" y="54" text-anchor="end">0,94</text>
+<!-- scale: y = 290 - (v-0.70)*1000 ; v=0.8866 -> 103.4 -->
+<rect x="75" y="123" width="60" height="167" fill="#2563eb"/><text x="105" y="117" text-anchor="middle">0,8781</text>
+<rect x="165" y="103" width="60" height="187" fill="#10b981"/><text x="195" y="97" text-anchor="middle">0,8866</text>
+<rect x="255" y="132" width="60" height="158" fill="#ef4444"/><text x="285" y="126" text-anchor="middle">0,8580</text>
+<rect x="345" y="172" width="60" height="118" fill="#ef4444"/><text x="375" y="166" text-anchor="middle">0,8338</text>
+<rect x="435" y="119" width="60" height="171" fill="#f59e0b"/><text x="465" y="113" text-anchor="middle">0,8821</text>
+<rect x="525" y="124" width="60" height="166" fill="#f59e0b"/><text x="555" y="118" text-anchor="middle">0,8770</text>
+<rect x="615" y="154" width="60" height="136" fill="#a855f7"/><text x="645" y="148" text-anchor="middle">0,8636</text>
+<rect x="705" y="219" width="60" height="71" fill="#a855f7"/><text x="735" y="213" text-anchor="middle">0,7771</text>
+<line x1="60" y1="119" x2="840" y2="119" stroke="#dc2626" stroke-dasharray="6 4" stroke-width="2"/>
+<g text-anchor="middle" font-size="11"><text x="105" y="308">gốc</text><text x="195" y="308">dừng sớm</text><text x="285" y="308">chứa 32</text><text x="375" y="308">chứa 8</text><text x="465" y="308">Drop 0,2</text><text x="555" y="308">Drop 0,5</text><text x="645" y="308">phạt 10⁻⁴</text><text x="735" y="308">phạt 10⁻²</text></g>
+</svg>
+<figcaption>Sơ đồ 2: Chỉ "dừng sớm" (xanh lá) vượt bản gốc (xanh dương). Cả ba nhóm còn lại (đỏ, cam, tím) đều nằm dưới đường đỏ. Trục y bắt đầu từ 0,70 để thấy rõ khác biệt.</figcaption></figure>
+
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Nếu học sinh làm bài kém ở kỳ thi vì <i>đề chưa từng học</i>, thì bắt em học thuộc ít hơn (giảm sức chứa), bịt mắt khi ôn (Dropout) hay phạt khi viết dài (phạt trọng số) chỉ làm em yếu thêm. "Thông tin" là sách giáo khoa; "điều chuẩn" chỉ là kỷ luật học. Em đã dùng hết sách có trong tay rồi.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+<ul>
+<li><b>Dừng sớm (early stopping)</b>: chọn vòng có điểm kiểm cao nhất (vòng 31, 0,8866). Chênh so với bản gốc ở vòng cuối: 0,8866 − 0,8781 = <b>0,0085</b> trên bảng (thầy ghi 0,0084 do làm tròn từ số chưa làm tròn). Lưu ý: chọn vòng bằng chính tập kiểm định tạo ra một chút lạc quan, vì ta "chọn điểm cao nhất" trên tập đó.</li>
+<li>Khoảng cách học − kiểm của bản gốc: 0,9443 − 0,8781 = <b>0,0662</b>, đúng số thầy nêu.</li>
+<li>Sức chứa 32: 0,8781 − 0,8580 ≈ 0,02 mất; thầy ghi 0,0286 (so với "tốt nhất" 0,8866 − 0,8580 = 0,0286). Dropout 0,2: 0,8866 − 0,8826 = 0,0040. Phạt 10<sup>−4</sup>: 0,8866 − 0,8747 = 0,0119. Phạt 10<sup>−2</sup>: 0,8866 − 0,7844 = 0,1022. Tức là các con số "mất" được tính so với điểm <b>tốt nhất</b> của bản gốc (0,8866).</li>
+<li>Phạt trọng số tốn 7,5–9,5 giây so với 2,4 giây vì Adam có <code>weight_decay</code> làm thêm phép tính trên mọi tham số mỗi bước.</li>
+<li>Chẩn đoán: nếu bệnh là <b>phương sai cao do mô hình quá lớn</b>, điều chuẩn có tác dụng. Ở đây điều chuẩn làm điểm kiểm định giảm, nghĩa là mô hình đang ở vùng <i>thiếu thông tin / nhiễu nhãn</i> chứ không dư sức chứa.</li>
+</ul></div>
+
+<blockquote>
+<p><b>Ba trong bốn cách chống quá khớp làm điểm tệ đi</b></p>
+<p>Dừng sớm được thêm 0,0084 và không tốn thêm một giây nào, vì nó chỉ là đọc lại cột đã có sẵn. Ba cách còn lại đều kém hơn bản gốc: giảm sức chứa mất 0,0286, Dropout mất 0,0040, phạt trọng số mất 0,0119 ở mức nhẹ và 0,1022 ở mức nặng.</p>
+<p>Đây không phải lỗi cài đặt. Nó nói rằng khoảng cách 0,0662 giữa học và kiểm định ở bảng trên không phải do dư sức chứa. Mô hình đang khớp đúng thứ nó có thể khớp, và cái nó thiếu là thông tin, không phải sự kiềm chế.</p>
+<p>Cách đọc đúng: điều chuẩn chữa một loại quá khớp, loại do mô hình quá lớn so với dữ liệu. Ở đây bệnh khác, nên thuốc ấy chỉ làm mô hình yếu đi.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Bác sĩ không kê thuốc hạ sốt cho người đang bị lạnh. "Quá khớp" là triệu chứng (điểm học cao, điểm kiểm thấp), nhưng có nhiều nguyên nhân. Thuốc điều chuẩn chỉ đúng với nguyên nhân "mô hình quá to". Thầy muốn bạn học cách <b>chẩn đoán trước khi chữa</b>.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+Sai số tổng quát hoá = thiên lệch + phương sai + nhiễu không giảm được. Điều chuẩn giảm phương sai nhưng tăng thiên lệch. Khi khoảng cách học–kiểm chủ yếu đến từ <i>thiếu dữ liệu hoặc nhiễu</i>, giảm phương sai không giúp, vì cải thiện thật sự chỉ đến từ thêm thông tin (đặc trưng tốt hơn, thêm dữ liệu). Đó chính là lý do bài LinearSVC trên đặc trưng tầng 3 ở mục 3 thắng.</div>
+
+<hr>
+<h3>2.4 Kích thước ngừng miễn phí khi đồng hồ là ràng buộc</h3>
+<blockquote>
+<p>Ba mô hình, cùng một ngân sách 5 giây, ai chạy được bao nhiêu vòng thì chạy. Cột số vòng là những gì 5 giây mua được trên máy viết tài liệu này, và hai cột điểm là điểm sau đúng số vòng ấy:</p>
+<div class="tw"><table>
+<tr><th>Mô hình</th><th>Số vòng chạy được</th><th>Kiểm cuối</th><th>Tốt nhất</th></tr>
+<tr><td>nhỏ, 32 nơ ron</td><td>111</td><td>0,8631</td><td>0,8751</td></tr>
+<tr><td>vừa, 128 nơ ron</td><td>87</td><td>0,8787</td><td>0,8893</td></tr>
+<tr><td>lớn, 2048 nơ ron</td><td>16</td><td>0,8745</td><td>0,8764</td></tr>
+</table></div>
+<p>Mô hình lớn gấp 16 lần mô hình vừa và chỉ chạy được 16 vòng, thua 0,0129. Mô hình nhỏ chạy được nhiều vòng nhất và cũng thua, 0,0142.</p>
+</blockquote>
+
+<figure>
+<svg viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+<text x="215" y="18" text-anchor="middle" font-size="14" font-weight="bold">Số vòng chạy được trong 5 giây</text>
+<text x="645" y="18" text-anchor="middle" font-size="14" font-weight="bold">Điểm "tốt nhất" sau đúng số vòng ấy</text>
+<line x1="40" y1="250" x2="400" y2="250" stroke="#9ca3af"/><line x1="470" y1="250" x2="830" y2="250" stroke="#9ca3af"/>
+<!-- left: scale 111 -> 200px => 1.8 px/unit -->
+<rect x="70" y="50" width="70" height="200" fill="#60a5fa"/><text x="105" y="44" text-anchor="middle">111</text>
+<rect x="170" y="93" width="70" height="157" fill="#2563eb"/><text x="205" y="87" text-anchor="middle">87</text>
+<rect x="270" y="221" width="70" height="29" fill="#1e3a8a"/><text x="305" y="215" text-anchor="middle">16</text>
+<g text-anchor="middle"><text x="105" y="268">nhỏ (32)</text><text x="205" y="268">vừa (128)</text><text x="305" y="268">lớn (2048)</text></g>
+<!-- right: y = 250 - (v-0.85)*4000 -->
+<rect x="500" y="210" width="70" height="40" fill="#fbbf24"/><text x="535" y="204" text-anchor="middle">0,8751</text>
+<rect x="600" y="82" width="70" height="168" fill="#10b981"/><text x="635" y="76" text-anchor="middle">0,8893</text>
+<rect x="700" y="202" width="70" height="48" fill="#f87171"/><text x="735" y="196" text-anchor="middle">0,8764</text>
+<g text-anchor="middle"><text x="535" y="268">nhỏ</text><text x="635" y="268">vừa</text><text x="735" y="268">lớn</text></g>
+<text x="650" y="288" text-anchor="middle" font-size="11" fill="#6b7280">trục bắt đầu từ 0,85 để thấy chênh lệch</text>
+</svg>
+<figcaption>Sơ đồ 3: Mô hình nhỏ chạy nhiều vòng nhất, mô hình lớn ít nhất, nhưng điểm cao nhất thuộc mô hình vừa. Cỡ tối ưu nằm ở giữa.</figcaption></figure>
+
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Ba xe cùng chạy 5 giây: xe đạp đi nhiều vòng nhưng sức yếu, xe tải chở nhiều nhưng mới ra khỏi cổng, xe máy ở giữa đi xa nhất. Nơ ron nhiều thì mỗi vòng "tốn xăng" hơn, nên cùng ngân sách chạy được ít vòng hơn.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+Chi phí một vòng tỉ lệ gần tuyến tính với số tham số lớp ẩn (≈ d_vào × H). Khi H tăng 16 lần (128 → 2048), số vòng giảm từ 87 xuống 16 (≈ 5,4 lần, không đủ 16 lần vì còn chi phí cố định như đọc batch, Python overhead). Kiểm tra: 0,8893 − 0,8764 = 0,0129 (lớn thua vừa), 0,8893 − 0,8751 = 0,0142 (nhỏ thua vừa), khớp văn bản.</div>
+
+<blockquote>
+<p><b>Một phép kiểm ăn theo tốc độ máy là một phép kiểm sẽ trượt trên máy người khác</b></p>
+<p>Bảng này lúc đầu được kiểm bằng cách chạy lại đúng thí nghiệm ấy, tức là bấm giờ 5 giây, kèm một câu ghi chú của tôi: số vòng thì phụ thuộc máy, còn cột điểm thì không.</p>
+<p>Câu ấy sai, và cổng đã chứng minh. Chạy lúc máy đang bận việc khác, mô hình nhỏ chỉ kịp 34 vòng thay vì 111, và điểm tốt nhất tụt từ 0,8751 xuống 0,8548. Cột điểm phụ thuộc máy qua cột số vòng, đúng cái mà câu ghi chú kia phủ nhận.</p>
+<p>Bây giờ cổng tách làm hai. Hai cột điểm được chốt bằng cách cho đúng 111, 87 và 16 vòng, nên chúng tái lập được ở mọi nơi. Còn chuyện máy càng chậm thì càng ít vòng thì vẫn được kiểm, nhưng chỉ kiểm thứ tự: hình lớn luôn chạy được ít vòng hơn hình vừa, và hình vừa ít hơn hình nhỏ. Đó là thứ thật sự không đổi theo máy.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Giống thi chạy bộ "trong 5 phút": kết quả phụ thuộc đường chạy và sức khỏe hôm đó. Muốn so sánh công bằng thì quy định "chạy đúng 111 vòng", rồi mới so điểm. Tách <b>đại lượng đo</b> khỏi <b>thứ ta kiểm tra</b>.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+Đây là nguyên tắc thiết kế test: <b>test tất định (deterministic)</b> cố định số vòng nên điểm tái lập; <b>test bất biến (invariant)</b> chỉ kiểm quan hệ thứ tự <code>vong_lon &lt; vong_vua &lt; vong_nho</code>, vốn đúng trên mọi máy. Điều này cũng là bài học về <i>bấm giờ</i>: đừng dùng đồng hồ làm tham số của thí nghiệm khi cần tái lập. Dùng số vòng làm ngân sách, đồng hồ chỉ để cảnh báo.</div>
+
+<blockquote>
+<p><b>Câu khẩu hiệu “mô hình nhỏ huấn luyện xong thắng mô hình lớn huấn luyện dở” chỉ đúng một nửa</b></p>
+<p>Đúng ở chỗ: mô hình lớn bị cắt ngang thua mô hình vừa chạy đủ. Sai ở chỗ: mô hình nhỏ nhất cũng thua, dù nó chạy nhiều vòng nhất.</p>
+<p>Có một cỡ tối ưu, và nó nằm ở giữa. Cách tìm không phải suy luận mà là ba lần chạy như bảng trên, hết 15 giây. Trong sáu tiếng thi thì 15 giây là cái giá rẻ nhất bạn từng trả cho một quyết định.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Như chọn cỡ giày: nhỏ quá chật (thiếu sức chứa), to quá lỏng và vấp (chưa kịp học). Chỉ cần thử ba đôi, mất 15 giây, khỏi tranh luận.</div>
+
+<h2>3. Bài tập mẫu</h2>
+<blockquote>
+<p>Đề. Nộp bài PyTorch cho nhiệm vụ phân loại của tác vụ 1, đúng quy chế, rồi so với bài nộp buổi 11.</p>
+<div class="tw"><table>
+<tr><th></th><th>macro-F1 công khai</th><th>Norm_score</th><th>Thời gian</th></tr>
+<tr><td>mô hình trần của kho</td><td>73,24</td><td>100</td><td>—</td></tr>
+<tr><td>PyTorch của buổi này</td><td>86,52</td><td>135,39</td><td>4,9 giây</td></tr>
+<tr><td>LinearSVC trên đặc trưng tầng 3 (buổi 11)</td><td>94,77</td><td>157,36</td><td>0,1 giây</td></tr>
+</table></div>
+<p><b>Mạng nơ ron thua, và thua ở cả hai cột</b></p>
+<p>Bài PyTorch làm đúng mọi thứ: vòng huấn luyện viết tay, dừng sớm, seed và luồng đã ghim, chạy lại ra đúng số cũ, hết 4,9 giây trên ngân sách 1200 giây. Nó vẫn kém bài buổi 11 đúng 21,97 điểm Norm_score, và chậm hơn 49 lần.</p>
+<p>Lý do đã đo ở buổi 12: khi đặc trưng đã mang sẵn quan hệ mà bài toán cần, phần việc mà lớp ẩn làm thay bạn không còn nữa. Cộng thêm buổi này: giảm chiều xuống 300 để chạy nhanh cũng vứt đi một phần thông tin mà mô hình tuyến tính đang dùng.</p>
+<p>Bài học chiến thuật: đừng mở PyTorch trước khi đã thử một mô hình tuyến tính trên đặc trưng tốt. Không phải vì học sâu kém, mà vì thứ tự ấy cho bạn một mốc thật để so, và tốn mười lăm giây.</p>
+</blockquote>
+
+<figure>
+<svg viewBox="0 0 860 240" xmlns="http://www.w3.org/2000/svg" font-family="Arial,sans-serif" font-size="12">
+<text x="430" y="18" text-anchor="middle" font-size="14" font-weight="bold">Norm_score của ba bài nộp (càng cao càng tốt)</text>
+<line x1="230" y1="40" x2="230" y2="210" stroke="#9ca3af"/>
+<!-- scale 157.36 -> 560px => 3.56 px/unit -->
+<text x="222" y="75" text-anchor="end">mô hình trần</text><rect x="230" y="55" width="356" height="32" fill="#9ca3af"/><text x="594" y="76">100</text>
+<text x="222" y="130" text-anchor="end">PyTorch (buổi 14)</text><rect x="230" y="110" width="482" height="32" fill="#f87171"/><text x="720" y="131">135,39</text>
+<text x="222" y="185" text-anchor="end">LinearSVC (buổi 11)</text><rect x="230" y="165" width="560" height="32" fill="#10b981"/><text x="798" y="186">157,36</text>
+</svg>
+<figcaption>Sơ đồ 4: Mô hình tuyến tính trên đặc trưng tốt (0,1 giây) hơn mạng nơ ron (4,9 giây) đúng 21,97 điểm. 157,36 − 135,39 = 21,97 ✔; 4,9 / 0,1 = 49 lần ✔.</figcaption></figure>
+
+<div class="gv"><b class="h">🧠 Phân tích chi tiết &amp; Bản chất (Intuition):</b>
+Đặc trưng tốt giống nguyên liệu đã sơ chế sẵn: một cái chảo (LinearSVC) là đủ. Mạng nơ ron là cả nhà bếp công nghiệp để tự sơ chế, nhưng nguyên liệu đã sơ chế rồi thì bếp lớn chẳng thêm gì, lại tốn điện.</div>
+<div class="tk"><b class="h">🔬 Đào sâu kỹ thuật:</b>
+<ul>
+<li>Norm_score ở đây chuẩn hoá so với mô hình trần (73,24 → 100). Kiểm tra: 86,52 / 73,24 ≈ 1,1813 nhưng Norm_score là 135,39, nên công thức của kho <b>không phải tỉ lệ thuần</b>; đừng tự suy ra, hãy dùng đúng số công bố.</li>
+<li>LinearSVC tối ưu hàm lồi (hinge loss + L2) nên có nghiệm tối ưu toàn cục, nhanh và ổn định. Mạng MLP tối ưu hàm không lồi, nhạy với seed và số vòng.</li>
+<li>SVD xuống 300 chiều giữ phần phương sai lớn nhất nhưng bỏ các hướng nhỏ mà bộ phân loại tuyến tính có thể đang dùng (xem bài tập 4).</li>
+</ul></div>
+
+<h2>4. Bài tập tự làm</h2>
+<h3>Bài tập 1. Chạy đủ bốn chế độ</h3>
+<blockquote>
+<pre><code># python mo-hinh-torch.py
+# python mo-hinh-torch.py --can
+# python mo-hinh-torch.py --ngan-sach
+# python mo-hinh-torch.py --nop</code></pre>
+<p><b>Cổng kiểm</b></p>
+<p>Tám dòng của bảng mục 2.3 và ba dòng của bảng mục 2.4 khớp tới chữ số thập phân thứ tư. Cột giây thì không cần khớp. Rồi chạy <code>--nop</code> hai lần và so hai file <code>bai-nop.csv</code>: phải giống nhau từng byte.</p>
+</blockquote>
+<div class="tk"><b class="h">🔬 Gợi ý:</b>
+So sánh từng byte: <code>cmp bai-nop-1.csv bai-nop-2.csv</code> (không in gì = giống hệt) hoặc <code>sha256sum</code> hai file. Nhớ đổi tên file đầu trước khi chạy lần hai kẻo bị ghi đè. Nếu lệch, kiểm tra: <code>dat_hat_giong()</code> đã được gọi chưa, <code>set_num_threads(1)</code> có nằm ở đầu file không.</div>
+
+<h3>Bài tập 2. Bỏ mo.eval() đi</h3>
+<blockquote>
+<p>Xoá hai lời gọi mo.train() và mo.eval(), chạy lại cấu hình Dropout 0,5.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Ghi lại điểm kiểm định trước và sau. Giải thích vì sao lỗi này chỉ hiện ra khi có Dropout, và vì sao nó là loại lỗi không bao giờ báo lỗi.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Gợi ý hướng suy nghĩ:</b>
+Mô-đun mới tạo mặc định ở chế độ train. Nếu bỏ cả hai lời gọi, mạng luôn ở chế độ train, nghĩa là Dropout vẫn tắt ngẫu nhiên nơ ron lúc đánh giá. Mạng không có Dropout (hay BatchNorm) thì train/eval cho cùng kết quả nên không thấy gì. Lỗi không có "exception" nào: code vẫn chạy, ra con số hợp lệ, chỉ là con số thấp và nhiễu hơn. Đó là loại lỗi <b>im lặng</b>, chỉ phát hiện nhờ kiểm tra số liệu.</div>
+
+<h3>Bài tập 3. Tìm cỡ tối ưu cho ngân sách của bạn</h3>
+<blockquote>
+<p>Bảng mục 2.4 dùng ba cỡ và ngân sách 5 giây. Làm lại với năm cỡ và ngân sách 30 giây.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Trả lời: cỡ tối ưu có dịch chuyển khi ngân sách tăng gấp sáu không, và dịch về phía nào? Đây là câu hỏi mà trong phòng thi bạn phải trả lời được trong ba phút.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Gợi ý hướng suy nghĩ:</b>
+Ngân sách lớn hơn cho mô hình lớn thêm nhiều vòng, nên khoảng thiệt của "mô hình lớn" thu hẹp, và cỡ tối ưu có xu hướng dịch về phía lớn hơn. Hãy đo thay vì tin vào dự đoán này: chọn năm cỡ (ví dụ 32, 128, 512, 1024, 2048), cho mỗi cỡ chạy đủ số vòng tương ứng 30 giây, rồi ghi bảng như mục 2.4.</div>
+
+<h3>Bài tập 4. Đừng giảm chiều nữa</h3>
+<blockquote>
+<p>Bài trong buổi này giảm còn 300 chiều bằng SVD cho nhanh. Hãy bỏ bước ấy, đưa thẳng 5269 đặc trưng thưa vào mạng.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Ghi lại cả điểm lẫn thời gian. Nếu điểm lên mà thời gian vẫn dưới 1200 giây thì bước giảm chiều là một quyết định sai, và bạn vừa tự chứng minh điều đó bằng số.</p>
+</blockquote>
+<div class="tk"><b class="h">🔬 Gợi ý kỹ thuật:</b>
+Ma trận thưa (sparse) đưa vào PyTorch cần chuyển đổi: dùng <code>torch.sparse_coo_tensor</code> hoặc đưa từng batch dạng dense (<code>X[idx].toarray()</code>) để tránh nổ bộ nhớ. Lớp đầu tiên có 5269 × H trọng số thay vì 300 × H, nên mỗi vòng chậm hơn khoảng 17 lần (5269/300 ≈ 17,6) ở phần lớp đầu.</div>
+
+<h3>Bài tập 5. Bài nộp gộp</h3>
+<blockquote>
+<p>Ghép bài phân loại tốt nhất bạn có với mô hình dịch trần, nộp một lần, ghi lại DIEM TAC VU 1.</p>
+<p><b>Cổng kiểm</b></p>
+<p>Con số ấy là mốc chính thức của bạn trước khi vào phần dịch. Buổi 17 sẽ phải vượt nó.</p>
+</blockquote>
+<div class="gv"><b class="h">🧠 Ý nghĩa:</b>
+Mốc chính thức giống vạch xuất phát: không có nó thì mọi cải tiến sau này đều là cảm giác. Hãy lưu lại số này cùng ngày và phiên bản code.</div>
+
+<h3>Chuẩn bị cho buổi sau</h3>
+<blockquote>
+<p>Buổi 15 làm bộ tự mã hoá và biểu diễn nén, tức là học khi không có nhãn. Mang theo câu hỏi: buổi 10 đã dùng SVD để nén 2143 chiều xuống 300 mà không mất điểm nào, vậy autoencoder làm được gì hơn thế?</p>
+</blockquote>
+<div class="tk"><b class="h">🔬 Gợi ý khởi động:</b>
+SVD/PCA là nén <b>tuyến tính</b>: chiếu lên không gian con. Autoencoder có thể nén <b>phi tuyến</b> (encoder → mã z → decoder, tối thiểu <code>‖x − x̂‖²</code>), nắm được cấu trúc cong mà phép chiếu thẳng bỏ sót. Nếu bỏ hàm kích hoạt phi tuyến, autoencoder tuyến tính hội tụ về cùng không gian con với PCA.</div>
+
+<div class="tk"><b class="h">🔬 Tổng kết buổi 14 (5 ý cần nhớ):</b>
+<ol>
+<li>Vòng huấn luyện cần đủ bốn chi tiết: <code>zero_grad</code>, <code>train/eval</code>, <code>no_grad</code>, <code>randperm</code>.</li>
+<li>Tái lập = ghim seed (random, numpy, torch) <b>và</b> ghim số luồng.</li>
+<li>Chống quá khớp phải bắt đầu bằng chẩn đoán; ở đây chỉ dừng sớm có lợi (+0,0084).</li>
+<li>Với ngân sách thời gian cố định, có cỡ mô hình tối ưu ở giữa; thử ba cỡ chỉ tốn 15 giây.</li>
+<li>Thử mô hình tuyến tính trên đặc trưng tốt trước khi mở PyTorch (94,77 vs 86,52).</li>
+</ol></div>
+</main>
+<footer>Luyện Olympic Trí tuệ nhân tạo · Buổi 14 · TS. Đỗ Phúc Hảo · Bản HTML độc lập, xem được ngoại tuyến</footer>
+</body>
+</html>

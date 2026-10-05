@@ -1,5 +1,5 @@
 import importlib.metadata as md
-from sklearn.
+from sklearn
 import sys
 
 print("python", sys.version.split()[0])
