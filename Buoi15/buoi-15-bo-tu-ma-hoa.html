@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Luyện Olympic AI | Buổi 15 – Bộ tự mã hoá và biểu diễn</title>
+<style>
+:root{--ink:#1f2937;--mut:#6b7280;--line:#e5e7eb;--blue:#2563eb;--green:#16a34a;--amber:#d97706;--red:#dc2626}
+*{box-sizing:border-box}
+body{margin:0;background:#fff;color:var(--ink);font:16px/1.7 "Segoe UI",Roboto,Arial,sans-serif}
+main{max-width:900px;margin:0 auto;padding:24px 18px 80px}
+h1{font-size:2rem;margin:.2em 0;color:#111}
+h2{font-size:1.5rem;margin:2.4em 0 .6em;padding-bottom:.25em;border-bottom:3px solid var(--blue)}
+h3{font-size:1.2rem;margin:1.8em 0 .5em;color:var(--blue)}
+.meta{color:var(--mut)}
+nav{background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:10px 18px;margin:18px 0;font-size:.93rem}
+nav a{color:var(--blue);text-decoration:none;margin-right:14px;white-space:nowrap}
+blockquote.src{margin:16px 0 8px;padding:12px 18px;background:#f3f4f6;border-left:5px solid #6b7280;border-radius:0 8px 8px 0}
+blockquote.src p{margin:.5em 0}
+blockquote.src b.k{color:#111}
+.brain,.tech,.warn{margin:8px 0 22px;padding:12px 18px;border-radius:8px}
+.brain{background:#f0fdf4;border:1px solid #bbf7d0}
+.tech{background:#eff6ff;border:1px solid #bfdbfe}
+.warn{background:#fffbeb;border:1px solid #fde68a}
+.brain>b:first-child,.tech>b:first-child,.warn>b:first-child{display:block;margin-bottom:4px}
+.brain ul,.tech ul,.warn ul{margin:.3em 0 .3em 1.2em;padding:0}
+table{border-collapse:collapse;margin:10px auto;font-size:.95rem;background:#fff}
+th,td{border:1px solid var(--line);padding:5px 14px;text-align:right}
+th{background:#f9fafb}
+td:first-child,th:first-child{text-align:left}
+pre{background:#0f172a;color:#e2e8f0;padding:12px 16px;border-radius:8px;overflow-x:auto;font:13px/1.55 Consolas,Menlo,monospace;margin:10px 0}
+code{font-family:Consolas,Menlo,monospace;background:#eef2f7;padding:1px 5px;border-radius:4px;font-size:.9em}
+pre code{background:none;padding:0}
+figure{margin:12px 0;text-align:center}
+figure svg{max-width:100%;height:auto;background:#fff;border:1px solid var(--line);border-radius:10px}
+figcaption{font-size:.88rem;color:var(--mut);margin-top:4px}
+svg text{font-family:"Segoe UI",Arial,sans-serif;fill:#1f2937}
+.foot{margin-top:50px;color:var(--mut);font-size:.9rem;border-top:1px solid var(--line);padding-top:12px}
+</style>
+</head>
+<body>
+<main>
+
+<blockquote class="src">
+<p><b class="k">Luyện Olympic Trí tuệ nhân tạo</b><br>Buổi 15<br><b class="k">Bộ tự mã hoá và biểu diễn</b><br>Phần: Học sâu<br>Phục vụ: sơ loại<br>Ngày 25 tháng 8 năm 2026<br>TS. Đỗ Phúc Hảo</p>
+</blockquote>
+<h1>Buổi 15 – Bộ tự mã hoá và biểu diễn</h1>
+<p class="meta">Bản mở rộng của tài liệu gốc · khung xám = nguyên văn bài giảng · 🧠 = trực giác &amp; ví dụ · 🔬 = đào sâu kỹ thuật</p>
+<nav><a href="#s1">1. Mục tiêu</a><a href="#s21">2.1 Nhãn là đầu vào</a><a href="#s22">2.2 AE vs PCA</a><a href="#s23">2.3 Thưa</a><a href="#s24">2.4 Ảnh</a><a href="#s25">2.5 Dùng được?</a><a href="#s3">3. Bài mẫu</a><a href="#s4">4. Tự làm</a><a href="#s5">Buổi sau</a><a href="#note">Ghi chú kiểm lỗi</a></nav>
+
+<!-- ============ 1 ============ -->
+<h2 id="s1">1. Mục tiêu</h2>
+<blockquote class="src">
+<p>Hiểu biểu diễn nén dùng để làm gì khi không có nhãn, và trả lời câu hỏi buổi 14 để lại: buổi 10 đã dùng SVD nén 2143 chiều xuống 300 mà không mất điểm nào, vậy autoencoder làm được gì hơn thế?</p>
+<p>Buổi này đo ba lần để trả lời, và cả ba lần đều cho cùng một kết luận, kết luận ấy không phải kết luận dễ chịu.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Hãy tưởng tượng bạn phải kể lại một bộ phim cho bạn bè chỉ bằng 32 từ. Bạn buộc phải chọn ra điều quan trọng nhất – đó là <i>biểu diễn nén</i>. Câu hỏi của buổi này: "điều quan trọng" theo thước đo của bộ nén (giữ lại nhiều pixel nhất) có trùng với "điều quan trọng" cho bài toán của bạn (ghép hình, phân loại) hay không? Ba phép đo ở dưới đều trả lời: <b>không nhất thiết</b>. Đó là lý do kết luận "không dễ chịu".</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li><b>Biểu diễn (representation)</b>: ánh xạ <code>z = f(x)</code> từ dữ liệu thô sang vectơ ít chiều hơn, hy vọng giữ phần thông tin có ích.</li>
+<li><b>SVD</b> ở buổi 10 là phép nén <i>tuyến tính</i>; <b>autoencoder</b> (AE) có thể nén <i>phi tuyến</i>. Câu hỏi "AE làm được gì hơn" tương đương: "có cấu trúc phi tuyến nào mà phép chiếu tuyến tính bỏ sót, <i>và</i> nó có ích cho nhiệm vụ không?"</li>
+<li>Ba lần đo: (1) AE vs PCA về lỗi tái tạo; (2) mã 32 chiều cho phân loại ở tác vụ 1; (3) mã 32 chiều cho đoán láng giềng ở tác vụ 2.</li></ul></div>
+
+<!-- ============ 2 ============ -->
+<h2 id="s2">2. Tóm tắt kiến thức</h2>
+<h3 id="s21">2.1 Nhãn chính là đầu vào</h3>
+<blockquote class="src">
+<p>Bộ tự mã hoá gồm hai nửa. Bộ mã hoá ép dữ liệu qua một nút thắt <i>k</i> chiều; bộ giải mã dựng lại dữ liệu từ <i>k</i> số ấy. Mất mát là sai khác giữa bản dựng lại và bản gốc.</p>
+<p>Không cần ai gán nhãn, vì nhãn chính là đầu vào. Đó là lý do nó thuộc nhóm học tự giám sát, và cũng là lý do nó hấp dẫn trong một kỳ thi cấm mô hình tiền huấn luyện: tập không nhãn của chính đề thi là thứ duy nhất còn lại để khai thác thêm.</p>
+</blockquote>
+<figure><div id="netA"></div><figcaption>Sơ đồ 1 – Autoencoder: Bộ mã hoá (encoder) ép <i>x</i> qua nút thắt <i>k</i> chiều, bộ giải mã (decoder) dựng lại <i>x̂</i>. Mất mát = ‖<i>x</i> − <i>x̂</i>‖<sup>2</sup>. Chiều cao cột ∝ số chiều (minh hoạ, không đúng tỉ lệ).</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Như trò "đánh máy lại từ trí nhớ": bạn đọc một trang giấy, chỉ được ghi vào 32 ô giấy nhớ, rồi một người khác dựa vào 32 ô đó viết lại trang gốc. Không ai phải chấm điểm ("nhãn") – cứ so bản viết lại với trang gốc là biết đúng sai. Vì tự mình làm đề rồi tự mình chấm, nên gọi là <i>tự giám sát</i>.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Mã hoá <code>z = f<sub>θ</sub>(x) ∈ R<sup>k</sup></code>, giải mã <code>x̂ = g<sub>φ</sub>(z)</code>, mất mát điển hình <code>L = (1/n) Σ ‖x − x̂‖²</code> (MSE). Huấn luyện bằng lan truyền ngược như mọi mạng khác (buổi 12).</li>
+<li>Với đề thi cấm tiền huấn luyện, AE là cách "học thêm" từ dữ liệu không nhãn của chính đề: tập test không nhãn vẫn dùng được để học biểu diễn (nhớ kiểm tra luật thi về việc dùng dữ liệu test).</li></ul></div>
+
+<blockquote class="src">
+<p><b class="k">Nút thắt rộng bằng đầu vào thì cả mô hình thành một phép chép</b></p>
+<p>Nếu <i>k</i> lớn hơn hoặc bằng số chiều đầu vào và không có ràng buộc nào khác, mạng có thể học hàm đồng nhất: lỗi tái tạo về 0 mà không học được gì cả. Tôi kiểm bằng một mạng 16 → 16 → 16 không phi tuyến: sau 2000 vòng, lỗi còn 1,45 · 10<sup>−6</sup>.</p>
+<p>Cho nên lỗi tái tạo tụt xuống gần 0 quá sớm không phải tin vui. Việc đầu tiên phải làm là kiểm xem nút thắt có hẹp thật không.</p>
+</blockquote>
+<figure><div id="netB"></div><figcaption>Sơ đồ 2 – Trái: nút thắt hẹp (16 → 4 → 16) buộc phải nén. Phải: nút thắt rộng bằng đầu vào (16 → 16 → 16) – mạng chỉ việc chuyển nguyên số liệu qua, ma trận trọng số tiến tới ma trận đơn vị <i>I</i>.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Nếu giáo viên cho bạn đủ 16 ô giấy nhớ để ghi lại một trang chỉ có 16 chữ, bạn chép nguyên văn là xong – không cần hiểu gì. Lỗi bằng 0 nhưng không học được "bản chất". Chỉ khi ô giấy nhớ ít hơn nội dung, bạn mới buộc phải tìm quy luật. Cũng như một học sinh học thuộc lòng đề cũ: điểm tuyệt đối trên đề cũ, vô dụng trên đề mới.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Nếu <i>k</i> ≥ <i>d</i> và mạng đủ biểu diễn được hàm đồng nhất, tối ưu toàn cục có <code>L = 0</code> với <code>g(f(x)) = x</code>. Lỗi 1,45·10<sup>−6</sup> sau 2000 vòng chỉ là chưa hội tụ hẳn về 0.</li>
+<li><b>Quy tắc kiểm</b>: luôn in kích thước nút thắt và so với số chiều đầu vào; nếu lỗi tái tạo bé bất thường ở vài epoch đầu thì nghi ngờ "đường tắt".</li>
+<li>Muốn dùng nút thắt rộng (overcomplete) thì phải thêm ràng buộc khác: phạt thưa (mục 2.3), thêm nhiễu (Bài tập 4), v.v.</li></ul></div>
+
+<h3 id="s22">2.2 Không phi tuyến thì autoencoder chỉ là PCA đắt tiền</h3>
+<blockquote class="src">
+<p>Bỏ hết hàm kích hoạt và độ lệch, bài toán còn lại chính là bài toán xấp xỉ hạng thấp, mà nghiệm tối ưu của nó là PCA. Đo trên 4800 × 300 đặc trưng của tác vụ 1:</p>
+<table>
+<tr><th>Cách nén</th><th>Lỗi tái tạo</th><th>Tỉ lệ mã gần 0</th><th>Giây</th></tr>
+<tr><td>PCA <i>k</i> = 8</td><td>0,001565</td><td>—</td><td>—</td></tr>
+<tr><td>AE tuyến tính <i>k</i> = 8</td><td>0,001597</td><td>1,4%</td><td>5,2</td></tr>
+<tr><td>AE phi tuyến <i>k</i> = 8</td><td>0,001046</td><td>0,3%</td><td>27,8</td></tr>
+<tr><td>AE phi tuyến + L1 <i>k</i> = 8</td><td>0,001835</td><td>99,6%</td><td>21,5</td></tr>
+<tr><td>PCA <i>k</i> = 32</td><td>0,001161</td><td>—</td><td>—</td></tr>
+<tr><td>AE tuyến tính <i>k</i> = 32</td><td>0,001172</td><td>1,6%</td><td>6,1</td></tr>
+<tr><td>AE phi tuyến <i>k</i> = 32</td><td>0,000566</td><td>0,5%</td><td>23,6</td></tr>
+<tr><td>AE phi tuyến + L1 <i>k</i> = 32</td><td>0,001705</td><td>94,0%</td><td>36,4</td></tr>
+</table>
+<p>Đọc hai dòng đầu mỗi khối: AE tuyến tính cho 0,001172 còn PCA cho 0,001161, tức là tệ hơn đúng 0,97%. Nó tốn sáu giây để đi tới gần đúng cái mà PCA giải được trong một phép phân rã, và không bao giờ vượt được, vì PCA đã là nghiệm tối ưu của chính bài toán ấy.</p>
+</blockquote>
+<figure><div id="chA"></div><figcaption>Biểu đồ 1 – Lỗi tái tạo (càng thấp càng tốt). Xám: PCA · xanh dương: AE tuyến tính · xanh lá: AE phi tuyến · cam: AE phi tuyến + L1. AE tuyến tính bám sát PCA; chỉ AE phi tuyến vượt được; L1 làm lỗi tăng.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+PCA giống một người thợ may đo "khung xương" tối ưu bằng thước thẳng. AE tuyến tính là một người học việc cũng chỉ có thước thẳng: mất 6 giây mày mò để tìm đúng cái khung mà thợ cả tìm ngay bằng công thức. Anh ta chỉ có thể <i>bằng</i>, không thể <i>hơn</i>. Muốn hơn phải có dụng cụ cong (phi tuyến).</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li><b>Định lý Eckart–Young</b>: xấp xỉ hạng-<i>k</i> tốt nhất của ma trận <i>X</i> theo chuẩn Frobenius là cắt SVD ở <i>k</i> giá trị kỳ dị lớn nhất, tức PCA. AE tuyến tính <code>x̂ = W₂W₁x</code> có <code>W₂W₁</code> hạng ≤ <i>k</i>, nên nghiệm tối ưu chạm đúng mức Eckart–Young.</li>
+<li>"Tỉ lệ mã gần 0" đo độ thưa của <i>z</i>; AE thường (1,4% đến 0,5%) hầu như không thưa, còn L1 làm 94–99,6% đơn vị mã tắt.</li>
+<li>Cột "Giây" cho thấy chi phí: AE phi tuyến chậm hơn PCA vài chục lần cho cùng bài.</li></ul></div>
+
+<blockquote class="src">
+<p><b class="k">Cùng không gian con, khác cơ sở, và bốn hướng lệch hẳn</b></p>
+<p>Tôi so hai không gian con 32 chiều bằng góc chính:</p>
+<table>
+<tr><td>cosin góc chính lớn nhất</td><td>0,999911</td></tr>
+<tr><td>cosin góc chính nhỏ nhất</td><td>0,030465</td></tr>
+<tr><td>số hướng trùng nhau, cosin &gt; 0,99</td><td>28 trên 32</td></tr>
+<tr><td>tỉ số lỗi tái tạo AE trên PCA</td><td>1,0097</td></tr>
+</table>
+<p>Hai mươi tám hướng trùng gần như hoàn hảo, còn bốn hướng cuối thì lệch hẳn: có hướng cosin chỉ 0,03, tức là gần vuông góc. Vậy mà lỗi tái tạo chỉ chênh 0,97%.</p>
+<p>Không mâu thuẫn: bốn hướng ấy nằm ở cuối phổ, mang rất ít phương sai, nên chọn sai chúng gần như không tốn gì. Bài học đọc được: hai biểu diễn có thể khác nhau rõ rệt mà vẫn tương đương về thứ mà bạn đang đo. Muốn biết chúng có thật sự khác nhau hay không thì phải đo bằng thước của nhiệm vụ, chứ không phải bằng thước của phép nén.</p>
+</blockquote>
+<figure><div id="angles"></div><figcaption>Sơ đồ 3 – 32 hướng của không gian con AE đối chiếu với PCA: 28 hướng (xanh) trùng (cosin &gt; 0,99), 4 hướng (cam) lệch, thấp nhất cosin 0,03 (≈ 88°). Bốn hướng lệch nằm cuối phổ phương sai nên gần như không ảnh hưởng lỗi.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Hai hoạ sĩ vẽ chân dung cùng một người. Họ vẽ khuôn mặt, mắt, mũi giống hệt nhau (28 nét chính); chỉ khác ở 4 nét rất mờ trên tóc mai. Nhìn tổng thể, hai bức giống 99%. Nhưng nếu bài toán của bạn là "đếm sợi tóc mai" thì hai bức hoàn toàn khác. Thước đo quyết định bạn có thấy sự khác biệt hay không.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li><b>Góc chính (principal angles)</b> giữa hai không gian con <i>U</i>, <i>V</i> (cơ sở trực chuẩn): cosin các góc là giá trị kỳ dị của <code>UᵀV</code> (viết <code>U^T V</code>). Cosin = 1: hướng trùng; cosin = 0: vuông góc.</li>
+<li>AE chỉ xác định được <i>không gian con</i>, không xác định cơ sở – xoay mã bằng một ma trận khả nghịch cho cùng lỗi, nên không thể so từng nơ-ron với từng thành phần PCA.</li>
+<li>Lỗi PCA phần bị bỏ = tổng phương sai các hướng không giữ. Bốn hướng cuối mang phương sai nhỏ ⇒ đổi chúng chỉ làm lỗi tăng 0,97%.</li>
+<li>Hệ quả thực hành: đo tương đương bằng điểm nhiệm vụ (mục 2.5), đừng chỉ so lỗi nén.</li></ul></div>
+
+<blockquote class="src">
+<p>Phi tuyến mới là chỗ autoencoder có lý do tồn tại: ở <i>k</i> = 32 nó cho 0,000566, tức là lỗi chỉ bằng một nửa của PCA. Đó là điều một phép chiếu tuyến tính không thể làm được.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Dữ liệu thật thường nằm trên một "mặt cong" (như tờ giấy cuộn lại thành ống). PCA chỉ có thể xấp xỉ mặt cong bằng một tấm phẳng; AE phi tuyến "uốn" tấm phẳng theo đúng độ cong nên khít hơn, lỗi giảm một nửa.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Dữ liệu nằm gần một đa tạp (manifold) cong thì chiều nội tại thấp nhưng không tuyến tính; hàm kích hoạt (ReLU, tanh…) cho AE khả năng mô hình hoá đa tạp.</li>
+<li>Lỗi 0,000566 so với 0,001161 là tỉ số ≈ 2,05 – khớp "một nửa".</li>
+<li>Nhưng ở mục 2.5 sẽ thấy: lỗi nén tốt hơn <i>chưa chắc</i> cho điểm nhiệm vụ tốt hơn.</li></ul></div>
+
+<h3 id="s23">2.3 Bộ mã hoá thưa: đổi độ chính xác lấy tính thưa</h3>
+<blockquote class="src">
+<p>Thêm phạt L1 lên chính giá trị mã. Kết quả: 94,0% đơn vị mã gần 0 ở <i>k</i> = 32, đổi lại lỗi tái tạo tăng từ 0,000566 lên 0,001705, tức là tệ hơn cả PCA.</p>
+<p>Đó là một đánh đổi có chủ ý, không phải một thất bại: khi mỗi mẫu chỉ kích hoạt vài đơn vị, từng đơn vị có xu hướng ứng với một nét dễ đọc hơn. Nhưng nếu bạn chỉ cần nén thì đừng bật L1, vì bạn đang trả tiền cho một thứ mình không dùng.</p>
+</blockquote>
+<figure><div id="sparse"></div><figcaption>Sơ đồ 4 – Mã 32 chiều của một mẫu: AE thường (trên) gần như mọi đơn vị đều "sáng"; AE thưa L1 (dưới) chỉ vài đơn vị sáng (minh hoạ, độ sáng ∝ |giá trị|).</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+AE thường như một ban nhạc mà mọi nhạc công cùng chơi một chút trong mọi bài. AE thưa như dàn nhạc mà mỗi bài chỉ vài nhạc công lên chơi: nghe bài nào biết ngay "ồ, bài này là trống và đàn bầu". Mỗi nhạc công (đơn vị mã) có vai trò rõ ràng – nhưng tổng âm thanh dựng lại kém trung thực hơn.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Mất mát: <code>L = MSE(x, x̂) + λ · mean(|z|)</code>. Phạt L1 kéo nhiều thành phần của <i>z</i> về đúng 0 (tính chất thưa của L1).</li>
+<li>Số liệu: 0,000566 → 0,001705 (≈ 3,0 lần); so PCA 0,001161 thì tệ hơn ≈ 1,47 lần.</li>
+<li>Tham số <i>λ</i> điều chỉnh đánh đổi: <i>λ</i> lớn ⇒ thưa hơn, lỗi cao hơn. Chỉ bật khi mục tiêu là <i>diễn giải được</i> hoặc <i>chọn đặc trưng</i>.</li></ul></div>
+
+<h3 id="s24">2.4 Trên ảnh thì phi tuyến ăn đậm hơn</h3>
+<blockquote class="src">
+<p>360 mảnh ghép của tác vụ 2, thu nhỏ về 24 × 24 × 3 = 1728 số:</p>
+<table>
+<tr><th>Số chiều mã</th><th>PCA</th><th>Autoencoder</th><th>Tỉ số</th></tr>
+<tr><td>4</td><td>0,019241</td><td><b>0,011070</b></td><td>1,74</td></tr>
+<tr><td>16</td><td>0,005363</td><td><b>0,002287</b></td><td>2,34</td></tr>
+<tr><td>32</td><td>0,002461</td><td><b>0,001647</b></td><td>1,49</td></tr>
+</table>
+</blockquote>
+<figure><div id="chC"></div><figcaption>Biểu đồ 2 – Lỗi tái tạo trên ảnh: AE (xanh lá) thấp hơn PCA (xám) ở cả ba cỡ mã; khoảng cách tương đối lớn nhất ở <i>k</i> = 16 (tỉ số 2,34).</figcaption></figure>
+<blockquote class="src">
+<p>[Hình 1]: Mã 32 chiều cho mảnh 24 x 24 x 3 = 1728 số, sai số 0.00165 — hàng trên: gốc, hàng dưới: tái tạo.</p>
+<p>Hình 1: Nén 1728 số xuống 32, tức 54 lần, rồi dựng lại. Màu và bố cục sống sót; các đường biên sắc nét thì không. Hàng dưới chính là toàn bộ những gì 32 con số giữ lại được.</p>
+</blockquote>
+<figure><svg viewBox="0 0 640 250" width="640" role="img" aria-label="Minh hoạ nén ảnh">
+<defs><filter id="bl" x="-10%" y="-10%" width="120%" height="120%"><feGaussianBlur stdDeviation="3.5"/></filter>
+<clipPath id="cp"><rect width="110" height="90"/></clipPath>
+<g id="p1"><rect width="110" height="90" fill="#cfe8a0"/><rect x="10" y="8" width="60" height="38" fill="#c8f0d0"/></g>
+<g id="p2"><rect width="110" height="90" fill="#d9b86c"/><rect x="25" y="25" width="60" height="55" fill="#e8e060"/></g>
+<g id="p3"><rect width="110" height="90" fill="#e040e0"/><rect x="20" y="30" width="70" height="50" fill="#e8e060"/></g></defs>
+<text x="8" y="22" font-size="13" font-weight="bold">gốc</text>
+<g transform="translate(60,10)"><use href="#p1"/></g><g transform="translate(260,10)"><use href="#p2"/></g><g transform="translate(460,10)"><use href="#p3"/></g>
+<text x="320" y="125" text-anchor="middle" font-size="22">↓ mã 32 số (nén 54 lần) ↓</text>
+<text x="8" y="152" font-size="13" font-weight="bold">tái tạo</text>
+<g transform="translate(60,140)"><g clip-path="url(#cp)"><use href="#p1" filter="url(#bl)"/></g></g>
+<g transform="translate(260,140)"><g clip-path="url(#cp)"><use href="#p2" filter="url(#bl)"/></g></g>
+<g transform="translate(460,140)"><g clip-path="url(#cp)"><use href="#p3" filter="url(#bl)"/></g></g>
+<text x="320" y="245" text-anchor="middle" font-size="13">Màu và bố cục sống sót · biên sắc nét bị nhoè (minh hoạ mô phỏng Hình 1 gốc)</text></svg>
+<figcaption>Sơ đồ 5 – Mô phỏng Hình 1: tái tạo giữ màu, mất biên.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Nén 1728 số xuống 32 giống kể lại một bức tranh bằng một câu: "nền xanh nhạt, có ô vuông sáng ở góc trên". Người nghe vẽ lại được màu và bố cục, nhưng không thể vẽ đúng đường viền chính xác từng pixel – nên bức tranh bị "nhoè" ở mép.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Hệ số nén 1728/32 = 54. Ảnh có tương quan không gian mạnh (pixel kề nhau gần giống nhau) nên dư thừa nhiều ⇒ AE phi tuyến khai thác tốt hơn so với dữ liệu đặc trưng ở 2.2.</li>
+<li>MSE trung bình trên toàn pixel ưu tiên vùng phẳng rộng; biên là vùng tần số cao, chiếm ít pixel ⇒ đóng góp ít vào mất mát ⇒ bị nhoè. Đây là mầm của kết luận ở 2.5.</li>
+<li>Hình sơ đồ trên chỉ là minh hoạ mô phỏng; số liệu thật nằm ở bảng.</li></ul></div>
+
+<h3 id="s25">2.5 Câu hỏi thật không phải tái tạo, mà là dùng được hay không</h3>
+<blockquote class="src">
+<p>Hai phép đo, hai bộ dữ liệu, cùng một kết luận.</p>
+<p><b class="k">Phép đo thứ nhất, trên tác vụ 1.</b> Lấy mã 32 chiều làm đầu vào cho một mô hình phân loại:</p>
+<table>
+<tr><th>Biểu diễn</th><th>Lỗi tái tạo</th><th>macro-F1 phân loại</th></tr>
+<tr><td>PCA 32 chiều</td><td>0,001161</td><td><b>0,7396</b></td></tr>
+<tr><td>mã AE 32 chiều</td><td><b>0,000566</b></td><td>0,7305</td></tr>
+<tr><td>không nén, 300 chiều</td><td>0</td><td><b>0,8347</b></td></tr>
+</table>
+<p>Autoencoder tái tạo tốt gấp đôi PCA và phân loại <i>kém hơn</i> 0,0090. Còn nén xuống 32 chiều bằng cách nào cũng mất khoảng 0,10 so với giữ nguyên 300 chiều.</p>
+</blockquote>
+<figure><div id="chF"></div><figcaption>Biểu đồ 3 – macro-F1 (cao hơn là tốt hơn): AE tái tạo tốt gấp đôi nhưng phân loại không hơn PCA; cả hai thua bản không nén ≈ 0,10.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Hai thủ thư tóm tắt sách. Thủ thư AE tóm tắt sao cho khi đọc lại gần như tái hiện đủ chữ, thủ thư PCA tóm tắt đơn giản hơn. Nhưng khi bạn hỏi "đây là sách thể loại gì?", bản tóm tắt tỉ mỉ của AE không giúp gì hơn. Giữ trọn sách (300 chiều) vẫn tốt nhất, vì nén nào cũng mất chi tiết có ích.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li><b>macro-F1</b> = trung bình cộng F1 của từng lớp, mỗi lớp trọng số như nhau, nhạy với lớp ít mẫu.</li>
+<li>0,7396 − 0,7305 = 0,0091 (tài liệu ghi 0,0090 do làm tròn từ giá trị gốc); 0,8347 − 0,7396 = 0,0951 và 0,8347 − 0,7305 = 0,1042, hai giá trị đều ≈ 0,10.</li>
+<li>Tái tạo gấp đôi: 0,001161/0,000566 ≈ 2,05.</li></ul></div>
+
+<blockquote class="src">
+<p><b class="k">Phép đo thứ hai, trên tác vụ 2.</b> Dùng mã 32 chiều để đoán mảnh nào nằm bên phải mảnh nào, đúng bài toán mà buổi 11 đã đo bằng đặc trưng khác:</p>
+<table>
+<tr><th>Đặc trưng</th><th>Đoán đúng láng giềng phải</th></tr>
+<tr><td>histogram màu của cả mảnh (buổi 11)</td><td>0,2986</td></tr>
+<tr><td>mã autoencoder 32 chiều</td><td>0,3889</td></tr>
+<tr><td>sai khác bình phương ở biên (buổi 11)</td><td><b>0,9201</b></td></tr>
+</table>
+</blockquote>
+<figure><div id="chG"></div><figcaption>Biểu đồ 4 – Tỉ lệ đoán đúng láng giềng phải (tác vụ 2). Đặc trưng biên thủ công hơn mã AE tới ≈ 53 điểm phần trăm.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Ghép hình thì cần nhìn <i>mép</i> của mảnh: mép bên phải mảnh A phải khớp với mép bên trái mảnh B, như ghép hai mảnh bìa. Mã AE giống như tóm tắt "mảnh này màu xanh, góc có ô vuông" – đúng nhưng không nói gì về chỗ mép. Còn đặc trưng biên chính là việc so thẳng hai mép.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Với 360 mảnh, đoán ngẫu nhiên có xác suất khoảng 1/359 ≈ 0,28%; cả ba cách đều xa mức ngẫu nhiên, nhưng chỉ cách thứ ba gần như giải được bài.</li>
+<li>Histogram màu bỏ hết thông tin vị trí; mã AE giữ cấu trúc thô nhưng mất chi tiết biên; sai khác ở biên là đúng đại lượng bài toán cần.</li></ul></div>
+
+<blockquote class="src">
+<p><b class="k">Mã tái tạo gần như hoàn hảo vẫn gần như vô dụng cho nhiệm vụ</b></p>
+<p>Mã 32 chiều ấy dựng lại được cả mảnh với sai số 0,001647, tức là mắt thường nhìn hình trên vẫn nhận ra từng mảnh. Vậy mà nó chỉ đoán đúng láng giềng 38,89%, thua đặc trưng biên tới 53 điểm phần trăm, và chỉ hơn histogram màu một chút.</p>
+<p>Lý do nằm ngay trong hàm mất mát: sai số bình phương trên cả 1728 số gần như không quan tâm tới vài cột pixel ở mép, mà chính vài cột ấy mới là thứ bài ghép hình cần. Autoencoder đã tối ưu đúng thứ bạn bảo nó tối ưu, và đó không phải thứ bạn cần.</p>
+<p>Quy tắc rút ra, dùng được cho mọi biểu diễn không giám sát: đừng chọn biểu diễn bằng lỗi tái tạo. Hãy đưa nó vào một mô hình nhỏ của chính nhiệm vụ và đo điểm. Phép đo ấy tốn vài giây và trả lời đúng câu hỏi bạn đang hỏi.</p>
+<p>Và đây là câu trả lời cho câu hỏi buổi 14 để lại: với bài này, autoencoder không làm được gì hơn SVD. Buổi 10 đã đo rằng 300 chiều tuyến tính giữ trọn thông tin cần thiết, nên phần phi tuyến không còn chỗ để thắng. Nó chỉ có chỗ khi phép chiếu tuyến tính thật sự đang làm mất thứ gì đó, và bạn phải kiểm điều đó trước chứ không giả định.</p>
+</blockquote>
+<figure><svg viewBox="0 0 640 170" width="640" role="img" aria-label="Quy trình chọn biểu diễn">
+<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8z" fill="#374151"/></marker></defs>
+<rect x="8" y="20" width="130" height="60" rx="8" fill="#fee2e2" stroke="#dc2626"/><text x="73" y="46" text-anchor="middle" font-size="13">Cách sai</text><text x="73" y="64" text-anchor="middle" font-size="12">chọn theo lỗi tái tạo</text>
+<rect x="8" y="100" width="130" height="60" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="73" y="126" text-anchor="middle" font-size="13">Cách đúng</text><text x="73" y="144" text-anchor="middle" font-size="12">chọn theo điểm nhiệm vụ</text>
+<path d="M140,50 H220" stroke="#374151" marker-end="url(#ar)"/><path d="M140,130 H220" stroke="#374151" marker-end="url(#ar)"/>
+<rect x="222" y="20" width="170" height="60" rx="8" fill="#fff" stroke="#9ca3af"/><text x="307" y="46" text-anchor="middle" font-size="12">AE: lỗi 0,001647 (rất tốt)</text><text x="307" y="64" text-anchor="middle" font-size="12">nhưng đoán đúng 38,89%</text>
+<rect x="222" y="100" width="170" height="60" rx="8" fill="#fff" stroke="#9ca3af"/><text x="307" y="126" text-anchor="middle" font-size="12">mô hình nhỏ + điểm nhiệm vụ</text><text x="307" y="144" text-anchor="middle" font-size="12">tốn vài giây</text>
+<path d="M394,50 H440" stroke="#374151" marker-end="url(#ar)"/><path d="M394,130 H440" stroke="#374151" marker-end="url(#ar)"/>
+<rect x="442" y="20" width="190" height="60" rx="8" fill="#fee2e2" stroke="#dc2626"/><text x="537" y="55" text-anchor="middle" font-size="12">tưởng tốt, thực ra vô dụng</text>
+<rect x="442" y="100" width="190" height="60" rx="8" fill="#dcfce7" stroke="#16a34a"/><text x="537" y="135" text-anchor="middle" font-size="12">biết biểu diễn có dùng được</text></svg>
+<figcaption>Sơ đồ 6 – Quy tắc: chọn biểu diễn theo điểm của chính nhiệm vụ, không theo lỗi tái tạo.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Bạn thuê một hoạ sĩ chép tranh thật giống. Bức chép đẹp tuyệt, nhưng bạn thật ra cần một tấm bản đồ chính xác từng mép để ghép hình. Hoạ sĩ đã làm đúng việc bạn dặn (chép giống tổng thể), chỉ là bạn dặn nhầm việc. Thước đo tốt nhất là thử dùng sản phẩm vào đúng việc.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Vấn đề <b>lệch mục tiêu</b> (objective mismatch): mục tiêu huấn luyện (MSE toàn ảnh) ≠ mục tiêu thật (độ khớp mép).</li>
+<li>Thực hành: cố định mã, huấn luyện một mô hình nhỏ (hồi quy logistic hoặc k-NN) làm <b>linear probe</b>, rồi đo macro-F1 hay accuracy; dùng chính điểm đó để chọn <i>k</i>, loại AE, <i>λ</i>.</li>
+<li>Điều kiện để AE phi tuyến thắng SVD: phép chiếu tuyến tính phải đang làm mất thông tin có ích; kiểm bằng cách so điểm nhiệm vụ của SVD-300 với dữ liệu thô trước.</li></ul></div>
+
+<!-- ============ 3 ============ -->
+<h2 id="s3">3. Bài tập mẫu</h2>
+<blockquote class="src">
+<p><b class="k">Đề.</b> Hai mươi câu trắc nghiệm về bộ tự mã hoá, làm trong 20 phút.</p>
+<pre><code># python trac-nghiem.py # de bai
+# python trac-nghiem.py --dap-an # dap an kem mot dong ly do
+# python trac-nghiem.py --kiem # kiem chinh dap an</code></pre>
+<p>Tám trong hai mươi câu là câu tính, và chế độ <code>--kiem</code> tính lại từng câu bằng torch chứ không tin vào con số đã gõ trong file. Mười hai câu còn lại được kiểm những thứ mà một bộ đề dựng ẩu hay hỏng: phương án trùng nhau, không có đáp án đúng, hoặc đáp án dồn hết vào một chữ cái.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Như một giáo viên giỏi: trước khi phát đề, tự làm lại từng câu để chắc chắn đáp án đúng, và đếm xem đáp án có bị dồn vào một chữ cái không. Script <code>--kiem</code> chính là "giáo viên tự chấm lại" bằng máy.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Ba chế độ: không cờ (in đề), <code>--dap-an</code> (đáp án + lý do một dòng), <code>--kiem</code> (kiểm tự động).</li>
+<li>Câu tính: tính lại bằng torch thay vì tin con số gõ tay ⇒ chống sai số do sao chép.</li>
+<li>Câu không tính: kiểm cấu trúc – phương án trùng nhau; không có đáp án đúng; đáp án dồn một chữ cái.</li></ul></div>
+
+<blockquote class="src">
+<p><b class="k">Cổng kiểm bắt lỗi của chính tôi, và đây là lỗi ấy</b></p>
+<p>Lần chạy đầu tiên, cổng báo phân bố đáp án là {A : 1, B : 16, C : 3, D : 0}.</p>
+<p>Từng câu đều đúng, nhưng cả bộ đề thì hỏng: chọn B cho mọi câu là được 16/20 mà không cần biết gì. Tôi viết đề theo thứ tự đọc tự nhiên, và phương án đúng cứ rơi vào vị trí thứ hai.</p>
+<p>Cách sửa là xoay vòng phương án của từng câu để chữ cái đúng chạy đều A, B, C, D, giữ nguyên chữ nghĩa. Sau khi sửa: {A : 5, B : 5, C : 5, D : 5}.</p>
+<p>Nếu bạn tự soạn đề cho mình hoặc cho bạn bè, hãy đếm phân bố ấy. Nó là phép kiểm rẻ nhất và hầu như không ai làm.</p>
+</blockquote>
+<figure><div id="chQ"></div><figcaption>Biểu đồ 5 – Phân bố đáp án trước (đỏ) và sau (xanh) khi xoay vòng phương án. Trước: chọn B cho tất cả được 16/20; sau: mỗi chữ cái đúng 5 câu, đoán một chữ cái cố định chỉ được 5/20.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Một bài thi mà đáp án toàn "B" thì học sinh lười chỉ cần khoanh B là đạt 80%. Từng câu đều đúng, nhưng cả đề "lộ bí mật". Phải trộn đều vị trí đáp án như người chia bài xáo trộn bộ bài.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Đoán mù một chữ cái cố định: kỳ vọng 5/20 với phân bố đều (5/5/5/5) nhưng tới 16/20 với phân bố lệch trên. Sự chênh lệch này là "rò rỉ thông tin" của đề thi.</li>
+<li>Cách xoay vòng: với câu <i>i</i>, dịch các phương án cyclic để đáp án đúng nằm ở vị trí <code>i mod 4</code>. Đây là phép kiểm bất biến: hoán vị phương án không đổi nội dung câu.</li>
+<li>Bài học chung: một "cổng kiểm" tốt cũng phải kiểm <i>thuộc tính của cả bộ</i>, không chỉ từng phần tử.</li></ul></div>
+
+<!-- ============ 4 ============ -->
+<h2 id="s4">4. Bài tập tự làm</h2>
+<h3>Bài tập 1. Dựng lại cả ba bảng</h3>
+<blockquote class="src">
+<pre><code># python ae-dac-trung.py
+# python ae-dac-trung.py --khong-gian
+# python ae-dac-trung.py --dung-duoc
+# python ae-anh.py --hinh</code></pre>
+<p><b class="k">Cổng kiểm</b></p>
+<p>Mọi con số khớp tới chữ số thập phân thứ sáu với bảng ở mục 2.2, và tới chữ số thứ tư với bảng ở mục 2.6. Nếu máy bạn ra số khác, kiểm <code>torch.set_num_threads(1)</code> trước tiên, đúng như buổi 13 đã dặn.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Dựng lại bảng như làm lại thí nghiệm hoá học của thầy: nếu số liệu lệch, đừng vội nghi bản thân – kiểm "dụng cụ" (số luồng CPU) trước.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Bốn lệnh tương ứng: bảng 2.2 (<code>ae-dac-trung.py</code>), góc chính (<code>--khong-gian</code>), phép đo dùng được (<code>--dung-duoc</code>), ảnh + Hình 1 (<code>ae-anh.py --hinh</code>).</li>
+<li>Vì sao phải <code>torch.set_num_threads(1)</code>: tổng song song nhiều luồng có thứ tự cộng số thực khác nhau ⇒ sai khác ở chữ số cuối. Dùng thêm seed cố định cho tái lập.</li>
+<li>Lưu ý: "mục 2.6" trong tài liệu gốc không tồn tại – xem Ghi chú kiểm lỗi cuối trang.</li></ul></div>
+
+<h3>Bài tập 2. Ép autoencoder học đúng thứ bài ghép hình cần</h3>
+<blockquote class="src">
+<p>Mục 2.6 cho thấy mã AE kém hẳn ở việc đoán láng giềng. Hãy đổi hàm mất mát: chỉ tính sai số trên hai cột biên của mỗi mảnh thay vì trên cả mảnh, rồi đo lại tỉ lệ đoán đúng.</p>
+<p><b class="k">Cổng kiểm</b></p>
+<p>Ghi lại cả lỗi tái tạo lẫn tỉ lệ đoán đúng. Nếu tỉ lệ đoán tăng còn lỗi tái tạo tệ đi thì bạn vừa chứng minh lại luận điểm chính của buổi này bằng thí nghiệm của chính mình.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Muốn người học việc nhìn đúng chỗ mép thì phải chấm điểm đúng chỗ mép. Chấm toàn bức tranh thì họ chỉ lo phần giữa.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Cài đặt gợi ý: giữ nguyên đầu vào cả mảnh, nhưng <code>loss = mse(x_hat[..., :2], x[..., :2])</code> cộng thêm cột phải tương ứng (hai cột biên của mỗi mảnh – dùng cả trái và phải nếu bài đoán "bên phải").</li>
+<li>Báo cáo hai số: lỗi tái tạo trên cả mảnh (kỳ vọng tệ đi) và tỉ lệ đoán đúng láng giềng (kỳ vọng tăng).</li>
+<li>Đối chiếu: histogram 0,2986 · AE gốc 0,3889 · biên thủ công 0,9201.</li></ul></div>
+
+<h3>Bài tập 3. Tìm điểm mà phi tuyến bắt đầu có lợi</h3>
+<blockquote class="src">
+<p>Bảng mục 2.2 dùng <i>k</i> = 8 và <i>k</i> = 32. Quét <i>k</i> từ 2 tới 200, vẽ hai đường lỗi tái tạo của PCA và của AE phi tuyến.</p>
+<p><b class="k">Cổng kiểm</b></p>
+<p>Trả lời bằng số: ở <i>k</i> nào thì khoảng cách giữa hai đường lớn nhất, và ở <i>k</i> nào thì chúng gặp nhau? Giải thích vì sao chúng phải gặp nhau khi <i>k</i> đủ lớn.</p>
+</blockquote>
+<figure><svg viewBox="0 0 560 250" width="560" role="img" aria-label="Dạng đồ thị kỳ vọng">
+<line x1="50" y1="210" x2="530" y2="210" stroke="#374151"/><line x1="50" y1="20" x2="50" y2="210" stroke="#374151"/>
+<path d="M50,30 C80,110 130,160 250,190 S450,205 520,208" fill="none" stroke="#6b7280" stroke-width="3"/>
+<path d="M50,35 C80,150 120,180 250,198 S450,206 520,208" fill="none" stroke="#16a34a" stroke-width="3"/>
+<line x1="125" y1="20" x2="125" y2="210" stroke="#d97706" stroke-dasharray="4"/>
+<text x="130" y="35" font-size="12">khoảng cách lớn nhất (cỡ k nhỏ)</text>
+<line x1="470" y1="20" x2="470" y2="210" stroke="#dc2626" stroke-dasharray="4"/><text x="475" y="35" font-size="12" fill="#dc2626">gặp nhau?</text>
+<text x="290" y="240" text-anchor="middle" font-size="12">k (2 → 200)</text><text x="12" y="120" font-size="12" transform="rotate(-90 12,120)">lỗi tái tạo</text>
+<text x="300" y="150" font-size="12" fill="#6b7280" style="fill:#6b7280">PCA</text><text x="300" y="187" font-size="12" style="fill:#16a34a">AE phi tuyến</text></svg>
+<figcaption>Sơ đồ 7 – Dạng đường cong <i>kỳ vọng</i> (minh hoạ định tính, không phải số đo): hai đường cách xa nhất ở <i>k</i> trung bình–nhỏ rồi hội tụ về 0 khi <i>k</i> tiến tới số chiều thật của dữ liệu. Vị trí chính xác phải do thí nghiệm của bạn trả lời.</figcaption></figure>
+<div class="brain"><b>🧠 Trực giác</b>
+Cho 2 ô giấy nhớ thì mọi cách tóm tắt đều tệ. Cho rất nhiều ô thì ai cũng chép gần đủ. Chênh lệch giữa "thợ thẳng" và "thợ cong" lớn nhất ở khoảng giữa: đủ chỗ để cách làm thông minh phát huy, nhưng chưa đủ chỗ để cả hai chép nguyên.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Cách làm: lặp <i>k</i> trong lưới (2, 4, 8, 16, 32, 64, 100, 150, 200), với mỗi <i>k</i> huấn luyện AE (cùng seed, cùng epoch); PCA lấy từ SVD; lưu <code>gap = err_pca − err_ae</code>; <code>argmax(gap)</code> trả lời câu hỏi thứ nhất.</li>
+<li>Vì sao gặp nhau: khi <i>k</i> tiến tới chiều nội tại của dữ liệu (hoặc ≥ 300 chiều), cả hai đều tái tạo gần hoàn hảo – hạng của dữ liệu là trần – nên lỗi cả hai tiến về 0 và khoảng cách biến mất. Với dữ liệu hạng ≈ 300, PCA tại <i>k</i> = 300 có lỗi 0.</li>
+<li>Chú ý AE tốn công huấn luyện: dùng ít epoch hoặc <i>k</i> thưa để quét trong giới hạn thời gian.</li></ul></div>
+
+<h3>Bài tập 4. Autoencoder khử nhiễu</h3>
+<blockquote class="src">
+<p>Thêm nhiễu Gauss vào đầu vào nhưng giữ đích là ảnh sạch. Huấn luyện lại với cùng <i>k</i> = 32.</p>
+<p><b class="k">Cổng kiểm</b></p>
+<p>So ba con số: lỗi tái tạo trên ảnh sạch, lỗi trên ảnh nhiễu, và tỉ lệ đoán đúng láng giềng. Bản khử nhiễu có làm mã hữu ích hơn không, hay chỉ đổi một loại lỗi lấy một loại khác?</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Đưa cho học sinh một bài chép <i>mờ</i> nhưng bắt viết ra bản <i>sạch</i>. Muốn làm được, em phải hiểu cấu trúc chứ không chép chữ nguyên văn – mà "hiểu cấu trúc" chính là điều ta muốn ở một biểu diễn tốt.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Mất mát: <code>L = ‖x − g(f(x + ε))‖²</code> với <code>ε ~ N(0, σ²I)</code>; chọn <i>σ</i> vài mức (0,05; 0,1; 0,2) để thấy xu hướng.</li>
+<li>Ba số cần báo cáo: (a) lỗi trên ảnh sạch, (b) lỗi trên ảnh nhiễu (đưa ảnh nhiễu vào, so với ảnh sạch), (c) tỉ lệ đoán đúng láng giềng.</li>
+<li>Giả thuyết cần tự kiểm: khử nhiễu chủ yếu ép bỏ chi tiết tần số cao – mà biên cũng là tần số cao, nên có thể không giúp bài ghép hình. Hãy để số liệu trả lời.</li></ul></div>
+
+<h3>Bài tập 5. Soạn thêm mười câu trắc nghiệm</h3>
+<blockquote class="src">
+<p>Viết thêm mười câu theo đúng khuôn của <code>trac-nghiem.py</code>, trong đó ít nhất bốn câu là câu tính mà script kiểm lại được.</p>
+<p><b class="k">Cổng kiểm</b></p>
+<p>Chạy <code>--kiem</code> và phải đạt, kể cả phép kiểm phân bố đáp án. Câu tính nào mà bạn không viết nổi phép kiểm cho nó thì hãy bỏ: đề bài mà chính bạn không kiểm được là đề bài bạn không nên đưa cho người khác.</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Người ra đề giỏi luôn tự giải đề của mình trước. Nếu bạn không tự kiểm được một câu, nghĩa là chưa chắc câu đó đúng.</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li>Gợi ý câu tính kiểm được bằng torch: số tham số của mạng 1728→32→1728 (có độ lệch); hệ số nén 1728/32; tỉ số lỗi AE/PCA từ bảng; số câu đúng nếu chọn một chữ cái cố định.</li>
+<li>Với 10 câu mới, phân bố đáp án A/B/C/D không thể đều tuyệt đối (10 không chia hết cho 4): hãy chia 3/3/2/2 và chắc rằng không chữ cái nào chiếm quá nửa; hoặc gộp với 20 câu cũ để được 30 câu và kiểm toàn bộ phân bố.</li></ul></div>
+
+<!-- ============ 5 ============ -->
+<h2 id="s5">Chuẩn bị cho buổi sau</h2>
+<blockquote class="src">
+<p>Buổi 16 chuyển sang thị giác máy tính: tích chập, tăng cường dữ liệu, và mạng nhỏ huấn luyện từ đầu. Mang theo câu hỏi: đề thi cấm mô hình tiền huấn luyện, vậy một mạng tích chập nhỏ tự huấn luyện có hơn được đặc trưng biên thủ công của buổi 11 không?</p>
+<p>TS. Đỗ Phúc Hảo</p>
+</blockquote>
+<div class="brain"><b>🧠 Trực giác</b>
+Đặc trưng biên thủ công như một chiếc thước bạn tự mài rất khéo (0,9201). Mạng tích chập như một máy học cách tự mài thước từ dữ liệu. Câu hỏi: máy học từ 360 mảnh có mài được cây thước tốt hơn không?</div>
+<div class="tech"><b>🔬 Đào sâu</b>
+<ul><li><b>Tích chập</b>: bộ lọc nhỏ trượt trên ảnh, chia sẻ trọng số – vốn là bộ dò biên/cạnh học được, nên có thể học lại đúng thứ đặc trưng biên làm thủ công.</li>
+<li><b>Tăng cường dữ liệu</b> (lật, cắt, dịch) giúp mạng nhỏ khỏi quá khớp với chỉ 360 mảnh.</li>
+<li>Mốc đối chiếu cần vượt: 0,9201.</li></ul></div>
+
+<h2 id="note">Ghi chú kiểm lỗi tài liệu gốc</h2>
+<div class="warn"><b>⚠️ Các điểm cần lưu ý khi đối chiếu</b>
+<ul><li><b>"Mục 2.6" không tồn tại</b>: tài liệu chỉ có tới mục 2.5. Bài tập 1 và Bài tập 2 nhắc "bảng ở mục 2.6" và "Mục 2.6 cho thấy mã AE kém hẳn ở việc đoán láng giềng" – nội dung đó nằm ở <b>mục 2.5</b> (phép đo thứ hai). Tài liệu giữ nguyên chữ gốc ở trên.</li>
+<li><b>"Tệ hơn đúng 0,97%"</b>: từ hai giá trị đã làm tròn 0,001172/0,001161 tính ra ≈ 0,95%; số 0,97% khớp với tỉ số 1,0097 tính từ giá trị chưa làm tròn. Chỉ là sai khác làm tròn, không phải lỗi thực chất.</li>
+<li><b>"Kém hơn 0,0090"</b>: từ giá trị đã làm tròn tính ra 0,0091; cũng là chênh lệch làm tròn.</li>
+<li>Mọi số còn lại đã được kiểm: tỉ số 1,74 / 2,34 / 1,49; hệ số nén 54; 92,01 − 38,89 ≈ 53 điểm phần trăm; "tốt gấp đôi" ≈ 2,05.</li></ul></div>
+
+<div class="foot">Tài liệu mở rộng cho Luyện Olympic Trí tuệ nhân tạo – Buổi 15 · Nội dung gốc: TS. Đỗ Phúc Hảo · Sơ đồ mang tính minh hoạ, số liệu trong biểu đồ lấy từ các bảng của bài giảng · Mở được ngoại tuyến.</div>
+</main>
+
+<script>
+function net(id,sizes,labels,w){var W=w||620,H=200,n=sizes.length,mx=Math.max.apply(null,sizes),s='<svg viewBox="0 0 '+W+' '+H+'" role="img">';
+for(var i=0;i<n;i++){var x=50+i*(W-130)/(n-1),h=30+150*sizes[i]/mx,y=(H-h)/2-6,c=(i==0||i==n-1)?'#bfdbfe':'#fde68a';
+if(i<n-1){var x2=50+(i+1)*(W-130)/(n-1),h2=30+150*sizes[i+1]/mx,y2=(H-h2)/2-6;s+='<polygon points="'+(x+30)+','+y+' '+x2+','+y2+' '+x2+','+(y2+h2)+' '+(x+30)+','+(y+h)+'" fill="#f3f4f6" stroke="#d1d5db"/>'}
+s+='<rect x="'+x+'" y="'+y+'" width="30" height="'+h+'" rx="4" fill="'+c+'" stroke="#374151"/><text x="'+(x+15)+'" y="'+(H-14)+'" text-anchor="middle" font-size="12">'+labels[i]+'</text>'}
+return s+'</svg>'}
+document.getElementById('netA').innerHTML=net('',[1728,300,32,300,1728],['x (1728)','lớp ẩn','mã z (k=32)','lớp ẩn','x̂ (1728)']);
+document.getElementById('netB').innerHTML='<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center">'+net('',[16,4,16],['x (16)','z (4)','x̂ (16)'],300)+net('',[16,16,16],['x (16)','z (16)','x̂ (16) = x'],300)+'</div>';
+function bars(id,rows,max,d,ints){var h=rows.length*28+10,s='<svg viewBox="0 0 640 '+h+'" role="img">';
+rows.forEach(function(r,i){var y=i*28+5,w=r[1]/max*330,v=ints?r[1]:r[1].toFixed(d).replace('.',',');
+s+='<text x="255" y="'+(y+16)+'" text-anchor="end" font-size="12">'+r[0]+'</text><rect x="262" y="'+(y+2)+'" width="'+w+'" height="20" rx="3" fill="'+r[2]+'"/><text x="'+(268+w)+'" y="'+(y+17)+'" font-size="12">'+v+'</text>'});
+document.getElementById(id).innerHTML=s+'</svg>'}
+var G='#9ca3af',B='#3b82f6',V='#22c55e',O='#f97316';
+bars('chA',[['PCA k = 8',.001565,G],['AE tuyến tính k = 8',.001597,B],['AE phi tuyến k = 8',.001046,V],['AE phi tuyến + L1 k = 8',.001835,O],['PCA k = 32',.001161,G],['AE tuyến tính k = 32',.001172,B],['AE phi tuyến k = 32',.000566,V],['AE phi tuyến + L1 k = 32',.001705,O]],.002,6);
+bars('chC',[['k = 4 · PCA',.019241,G],['k = 4 · AE',.011070,V],['k = 16 · PCA',.005363,G],['k = 16 · AE',.002287,V],['k = 32 · PCA',.002461,G],['k = 32 · AE',.001647,V]],.02,6);
+bars('chF',[['PCA 32 chiều',.7396,G],['mã AE 32 chiều',.7305,V],['không nén, 300 chiều',.8347,B]],1,4);
+bars('chG',[['histogram màu (buổi 11)',.2986,G],['mã AE 32 chiều',.3889,V],['sai khác ở biên (buổi 11)',.9201,B]],1,4);
+bars('chQ',[['Trước · A',1,'#fca5a5'],['Trước · B',16,'#ef4444'],['Trước · C',3,'#fca5a5'],['Trước · D',0,'#fca5a5'],['Sau · A',5,V],['Sau · B',5,V],['Sau · C',5,V],['Sau · D',5,V]],20,0,true);
+(function(){var s='<svg viewBox="0 0 640 120" role="img">';for(var i=0;i<32;i++){var ok=i<28;s+='<rect x="'+(20+i*19)+'" y="25" width="16" height="40" rx="3" fill="'+(ok?'#22c55e':'#f97316')+'"/>'}
+s+='<text x="300" y="90" text-anchor="middle" font-size="12">28 hướng trùng (cosin &gt; 0,99)</text><text x="578" y="90" text-anchor="middle" font-size="12">4 hướng lệch</text><text x="320" y="14" text-anchor="middle" font-size="12">32 hướng của không gian con</text><text x="320" y="112" text-anchor="middle" font-size="12">cosin lớn nhất 0,999911 · nhỏ nhất 0,030465</text>';
+document.getElementById('angles').innerHTML=s+'</svg>'})();
+(function(){function row(t,y,on){var s='<text x="8" y="'+(y+16)+'" font-size="12">'+t+'</text>';for(var i=0;i<32;i++){var a=on.indexOf(i)>=0?1:(on===null?0:0.07);s+='<rect x="'+(130+i*15)+'" y="'+y+'" width="12" height="24" rx="2" fill="#2563eb" fill-opacity="'+(on==='all'?(0.35+0.6*((i*37)%10)/10):a)+'" stroke="#bfdbfe"/>'}return s}
+var s='<svg viewBox="0 0 640 100" role="img">'+row('AE thường',8,'all')+row('AE thưa L1',52,[3,11,24]);
+document.getElementById('sparse').innerHTML=s+'</svg>'})();
+</script>
+</body>
+</html>
