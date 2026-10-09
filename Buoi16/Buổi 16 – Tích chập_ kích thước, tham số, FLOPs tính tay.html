@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Buổi 16 – Tích chập: kích thước, tham số, FLOPs tính tay</title>
+<style>
+:root{--bg:#fff;--fg:#1f2937;--mut:#6b7280;--ac:#2563eb;--q:#eff6ff;--qb:#2563eb;--n:#f0fdf4;--nb:#16a34a;--t:#fff7ed;--tb:#ea580c;--line:#e5e7eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html,body{background:#fff;color:var(--fg)}
+body{font-family:-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.7;max-width:880px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:1.7em;margin:.2em 0;color:#111827}h2{font-size:1.35em;border-bottom:2px solid var(--line);padding-bottom:6px;margin-top:2em;color:var(--ac)}h3{font-size:1.1em;margin-top:1.4em}
+.meta{color:var(--mut);font-size:.92em}
+blockquote{background:var(--q);border-left:4px solid var(--qb);margin:14px 0;padding:10px 16px;border-radius:0 8px 8px 0}
+blockquote p{margin:.4em 0}
+.n,.t{padding:10px 16px;border-radius:8px;margin:10px 0}
+.n{background:var(--n);border-left:4px solid var(--nb)}.t{background:var(--t);border-left:4px solid var(--tb)}
+.n ul,.t ul{margin:.3em 0;padding-left:1.2em}
+.box{border:1px solid var(--line);border-radius:8px;padding:8px 14px;margin:10px 0;background:#fafafa}
+.tw{overflow-x:auto}table{border-collapse:collapse;margin:8px 0;font-size:.93em}th,td{border:1px solid #cbd5e1;padding:5px 9px;text-align:left}th{background:#e0e7ff}
+pre{background:#f3f4f6;padding:10px;border-radius:6px;overflow-x:auto;font-size:.88em}
+code{background:#f3f4f6;padding:1px 5px;border-radius:4px}
+figure{margin:14px 0;text-align:center}figcaption{font-size:.88em;color:var(--mut);text-align:left;margin-top:4px}
+svg{max-width:100%;height:auto}
+hr{border:0;border-top:1px solid var(--line);margin:22px 0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:light}}
+</style>
+</head>
+<body>
+<h1>Luyện Olympic Trí tuệ nhân tạo – Buổi 16</h1>
+<p class="meta">Tích chập: kích thước, tham số, FLOPs tính tay · Phần: Thị giác máy tính · Phục vụ: sơ loại · Ngày 25 tháng 8 năm 2026 · TS. Đỗ Phúc Hảo<br>Quy ước: <b>khung xanh dương</b> = nội dung gốc nguyên văn · 🧠 = giải thích đời thường · 🔬 = đào sâu kỹ thuật</p>
+
+<h2>1. Mục tiêu</h2>
+<blockquote><p>Tính đúng kích thước đầu ra, số tham số và FLOPs của một khối tích chập trong ba phút, không cần máy. Đề sơ loại 2025 hỏi đúng dạng ấy ở câu 43, và câu ấy được làm lại nguyên vẹn ở mục 3.</p><p>Buổi này không có mô hình nào được huấn luyện. Nó chỉ có công thức, số học, và một script đếm lại bằng torch để không ai phải tin lời tôi.</p></blockquote>
+<div class="n"><b>🧠 Bản chất:</b> Giống như học nhân chia để tính tiền chợ: không cần máy tính, chỉ cần thuộc vài "quy tắc ngón tay". Ở đây quy tắc là ba con số: ảnh ra to bao nhiêu, mô hình nặng bao nhiêu (tham số), và chạy tốn bao nhiêu phép tính (FLOPs).</div>
+<div class="t"><b>🔬 Kỹ thuật:</b> <i>Tham số</i> quyết định bộ nhớ lưu trọng số; <i>FLOPs</i> quyết định thời gian chạy. Hai đại lượng này khác nhau, và bài tập 4 sẽ cho thấy chúng thường nằm ở hai chỗ khác nhau của mạng.</div>
+
+<h2>2. Tóm tắt kiến thức</h2>
+<h3>2.1 Bảng công thức, một trang, mang vào phòng thi</h3>
+<blockquote>
+<div class="tw"><table>
+<tr><th>Hỏi gì</th><th>Công thức</th><th>Nhớ bằng</th></tr>
+<tr><td>kích thước ra</td><td>H<sub>ra</sub> = ⌊(H + 2p − d(k − 1) − 1) / s⌋ + 1</td><td>padding cộng vào, kernel trừ đi</td></tr>
+<tr><td>tham số</td><td>C<sub>ra</sub> · (C<sub>vào</sub>/g) · k<sup>2</sup> (+ C<sub>ra</sub> nếu có bias)</td><td>mỗi bộ lọc là một khối k × k × C<sub>vào</sub></td></tr>
+<tr><td>MACs</td><td>C<sub>ra</sub> · (C<sub>vào</sub>/g) · k<sup>2</sup> · H<sub>ra</sub> · W<sub>ra</sub></td><td>tham số nhân với số ô đầu ra</td></tr>
+<tr><td>FLOPs</td><td>≈ 2 × MACs</td><td>một nhân cộng một cộng</td></tr>
+<tr><td>pooling k, stride s</td><td>cùng công thức kích thước, 0 tham số</td><td>nó không học gì</td></tr>
+<tr><td>trường tiếp nhận</td><td>R<sub>ℓ</sub> = R<sub>ℓ−1</sub> + (k<sub>ℓ</sub> − 1) ∏<sub>i&lt;ℓ</sub> s<sub>i</sub></td><td>stride phía trước nhân dồn</td></tr>
+</table></div>
+<p>Hai dòng giữa là dòng đáng thuộc nhất, vì chúng khác nhau đúng một thừa số: MACs bằng tham số nhân với số ô đầu ra. Ai nhớ được câu ấy thì không bao giờ phải nhớ công thức thứ hai.</p></blockquote>
+
+<div class="n"><b>🧠 Ẩn dụ con dấu:</b> Một bộ lọc là một <i>con dấu</i> kích thước k × k × C<sub>vào</sub>. Số tham số = số "nét khắc" trên tất cả các con dấu. Con dấu được đóng lên từng ô của ảnh ra, nên số phép tính = số nét khắc × số lần đóng dấu. Vì vậy MACs = tham số × (H<sub>ra</sub> · W<sub>ra</sub>).</div>
+<div class="t"><b>🔬 Giải thích từng ký hiệu:</b>
+<ul>
+<li><b>p</b> (padding): thêm p ô viền mỗi phía nên +2p. <b>d</b> (dilation): giãn kernel, kernel hiệu dụng rộng d(k−1)+1, nên trừ d(k−1)+1 (đó là "−d(k−1) − 1"). <b>s</b> (stride): bước nhảy; ⌊ ⌋ là làm tròn xuống.</li>
+<li><b>g</b> (groups): chia kênh thành g nhóm; mỗi bộ lọc chỉ nhìn C<sub>vào</sub>/g kênh. g=1: tích chập thường; g=C<sub>vào</sub>: tích chập theo chiều sâu (depthwise).</li>
+<li><b>MAC</b> = một phép nhân-cộng gộp (multiply-accumulate); <b>FLOP</b> đếm nhân và cộng là hai phép, nên FLOPs ≈ 2 × MACs.</li>
+<li>Ví dụ nhanh: ảnh 32, k=3, p=1, s=1, d=1 → ⌊(32+2−2−1)/1⌋+1 = 32 (giữ nguyên kích thước).</li>
+</ul></div>
+
+<figure>
+<svg viewBox="0 0 640 210" xmlns="http://www.w3.org/2000/svg" font-family="Arial" font-size="13">
+<text x="10" y="18" font-weight="bold">Con dấu k=3 trượt trên ảnh 5×5 (p=0, s=1) → ra 3×3</text>
+<g id="grid" stroke="#94a3b8" fill="#f8fafc">
+<rect x="20" y="35" width="30" height="30"/><rect x="50" y="35" width="30" height="30"/><rect x="80" y="35" width="30" height="30"/><rect x="110" y="35" width="30" height="30"/><rect x="140" y="35" width="30" height="30"/>
+<rect x="20" y="65" width="30" height="30"/><rect x="50" y="65" width="30" height="30"/><rect x="80" y="65" width="30" height="30"/><rect x="110" y="65" width="30" height="30"/><rect x="140" y="65" width="30" height="30"/>
+<rect x="20" y="95" width="30" height="30"/><rect x="50" y="95" width="30" height="30"/><rect x="80" y="95" width="30" height="30"/><rect x="110" y="95" width="30" height="30"/><rect x="140" y="95" width="30" height="30"/>
+<rect x="20" y="125" width="30" height="30"/><rect x="50" y="125" width="30" height="30"/><rect x="80" y="125" width="30" height="30"/><rect x="110" y="125" width="30" height="30"/><rect x="140" y="125" width="30" height="30"/>
+<rect x="20" y="155" width="30" height="30"/><rect x="50" y="155" width="30" height="30"/><rect x="80" y="155" width="30" height="30"/><rect x="110" y="155" width="30" height="30"/><rect x="140" y="155" width="30" height="30"/>
+</g>
+<rect x="20" y="35" width="90" height="90" fill="#2563eb" fill-opacity=".25" stroke="#2563eb" stroke-width="3"/>
+<text x="25" y="150" fill="#2563eb" font-size="12"></text>
+<text x="190" y="85" font-size="26">→</text>
+<g stroke="#16a34a" fill="#f0fdf4"><rect x="240" y="65" width="30" height="30"/><rect x="270" y="65" width="30" height="30"/><rect x="300" y="65" width="30" height="30"/><rect x="240" y="95" width="30" height="30"/><rect x="270" y="95" width="30" height="30"/><rect x="300" y="95" width="30" height="30"/><rect x="240" y="125" width="30" height="30"/><rect x="270" y="125" width="30" height="30"/><rect x="300" y="125" width="30" height="30"/></g>
+<rect x="240" y="65" width="30" height="30" fill="#16a34a" fill-opacity=".5"/>
+<text x="360" y="75">Công thức: ⌊(5 + 0 − 2 − 1)/1⌋ + 1 = 3</text>
+<text x="360" y="100">Mất đúng k − 1 = 2 ô viền (5 → 3).</text>
+<text x="360" y="125">Thêm p=1: ⌊(5+2−2−1)/1⌋+1 = 5 (giữ nguyên).</text>
+<text x="360" y="150">Đổi s=2 (p=0): ⌊(5−2−1)/2⌋+1 = 2.</text>
+<text x="20" y="203" fill="#2563eb">Ô xanh dương = vùng con dấu nhìn; ô xanh lá = 1 ô đầu ra tương ứng</text>
+</svg>
+<figcaption>Hình 1. Minh hoạ công thức kích thước ra. "Padding cộng vào, kernel trừ đi": viền cộng 2p, kernel trừ k−1.</figcaption>
+</figure>
+
+<h3>Bias không đáng kể trong tham số, và không có mặt trong MACs</h3>
+<blockquote><p>Một lớp 3 × 3 với 512 kênh vào và ra có 2 359 296 trọng số và 512 bias, tức là bias chiếm 0,02%. Bỏ quên nó thì đáp án vẫn gần đúng.</p><p>Nhưng bỏ quên g trong C<sub>vào</sub>/g thì sai gấp g lần. Ở lớp D của bộ bài tập, g = 64: tham số là 576 chứ không phải 36 864. Đó là chỗ đề thi hay gài, chứ không phải chỗ bias.</p></blockquote>
+<div class="n"><b>🧠 Ẩn dụ:</b> Bias như hạt muối trong nồi canh 512 lít: bỏ quên thì canh vẫn vậy. Còn quên chia nhóm giống như tính nhầm số nồi: sai cả bậc độ lớn.</div>
+<div class="t"><b>🔬 Kiểm tra:</b> 512 / 2 359 296 ≈ 0,0217% ≈ 0,02% ✓. Với lớp D: 64 · (64/64) · 9 = 576; nếu quên g: 64 · 64 · 9 = 36 864; tỉ lệ đúng 64 = g ✓. Lưu ý: bias là một phép cộng mỗi ô, không phải phép nhân-cộng cùng loại, nên quy ước MACs bỏ qua nó.</div>
+
+<h3>2.2 Năm lớp làm ví dụ, tính sẵn để đối chiếu</h3>
+<blockquote>
+<div class="tw"><table>
+<tr><th>Lớp</th><th>Cấu hình</th><th>Ra</th><th>Tham số</th><th>MACs</th></tr>
+<tr><td>A</td><td>3 → 16, k=3, s=1, p=1, vào 32<sup>2</sup></td><td>16 × 32<sup>2</sup></td><td>448</td><td>442 368</td></tr>
+<tr><td>B</td><td>16 → 32, k=3, s=2, p=1, vào 32<sup>2</sup></td><td>32 × 16<sup>2</sup></td><td>4 640</td><td>1 179 648</td></tr>
+<tr><td>C</td><td>32 → 64, k=5, s=1, p=0, vào 16<sup>2</sup></td><td>64 × 12<sup>2</sup></td><td>51 264</td><td>7 372 800</td></tr>
+<tr><td>D</td><td>64 → 64, k=3, g=64, vào 8<sup>2</sup></td><td>64 × 8<sup>2</sup></td><td>576</td><td>36 864</td></tr>
+<tr><td>E</td><td>512 → 512, k=3, s=1, p=1, vào 7<sup>2</sup></td><td>512 × 7<sup>2</sup></td><td>2 359 296</td><td>115 605 504</td></tr>
+</table></div>
+<p>Lớp B cho thấy stride 2 làm gì: kích thước ra giảm còn một nửa mỗi chiều, nên số ô đầu ra giảm bốn lần, và MACs giảm bốn lần theo. Lớp C cho thấy padding 0 ăn mất viền: 16 vào mà chỉ còn 12 ra, mất đúng k − 1 = 4.</p>
+<p>Lớp D là tích chập theo chiều sâu. Cùng số kênh vào ra như một lớp thường, mà tham số chỉ còn 576 thay vì 36 864, tức là rẻ hơn đúng 64 lần, bằng đúng số nhóm. Đó là toàn bộ ý tưởng của MobileNet, gói trong một dòng bảng.</p></blockquote>
+<div class="t"><b>🔬 Kiểm lại từng dòng bằng công thức:</b>
+<ul>
+<li><b>A:</b> trọng số 16·3·9 = 432, +16 bias = 448 ✓. Kích thước: ⌊(32+2−2−1)/1⌋+1 = 32. MACs = 432 · 32·32 = 442 368 ✓.</li>
+<li><b>B:</b> 32·16·9 = 4 608, +32 = 4 640 ✓. Ra: ⌊(32+2−2−1)/2⌋+1 = ⌊15,5⌋+1 = 16. MACs = 4 608 · 256 = 1 179 648 ✓.</li>
+<li><b>C:</b> 64·32·25 = 51 200, +64 = 51 264 ✓. Ra: 16−4 = 12. MACs = 51 200 · 144 = 7 372 800 ✓.</li>
+<li><b>D:</b> 576 trọng số; MACs = 576 · 64 = 36 864 ✓ (trùng ngẫu nhiên với con số "36 864" tham số của lớp thường, đừng nhầm hai đại lượng).</li>
+<li><b>E:</b> 2 359 296 · 49 = 115 605 504 ✓.</li>
+<li>⚠️ Lưu ý nhỏ: cột tham số của A, B, C <i>đã gồm bias</i> (448 = 432 + 16), còn D và E ghi <i>chỉ trọng số</i>. Khi đối chiếu đáp án, hãy xem bài đang tính có bias hay không.</li>
+</ul></div>
+<div class="n"><b>🧠 Ẩn dụ depthwise:</b> Tích chập thường như một đầu bếp nếm <i>cả 64 nguyên liệu</i> rồi trộn lại cho mỗi món. Depthwise như 64 đầu bếp, mỗi người chỉ lo <i>một</i> nguyên liệu: rẻ hơn 64 lần. (MobileNet sau đó thêm một lớp 1×1 để trộn các kênh lại.)</div>
+
+<figure>
+<svg viewBox="0 0 640 190" xmlns="http://www.w3.org/2000/svg" font-family="Arial" font-size="13">
+<text x="10" y="18" font-weight="bold">Lớp thường (g=1) và depthwise (g=64): cùng 64 kênh vào, 64 kênh ra</text>
+<rect x="20" y="40" width="270" height="100" fill="#fff7ed" stroke="#ea580c" rx="8"/>
+<text x="35" y="65" font-weight="bold">Thường: 64 bộ lọc</text>
+<text x="35" y="88">mỗi bộ lọc = 3 × 3 × 64 = 576 trọng số</text>
+<text x="35" y="110">tổng = 64 × 576 = 36 864</text>
+<text x="35" y="130" fill="#ea580c">mỗi bộ lọc nhìn cả 64 kênh</text>
+<rect x="340" y="40" width="280" height="100" fill="#f0fdf4" stroke="#16a34a" rx="8"/>
+<text x="355" y="65" font-weight="bold">Depthwise: 64 bộ lọc</text>
+<text x="355" y="88">mỗi bộ lọc = 3 × 3 × 1 = 9 trọng số</text>
+<text x="355" y="110">tổng = 64 × 9 = 576</text>
+<text x="355" y="130" fill="#16a34a">mỗi bộ lọc chỉ nhìn 1 kênh</text>
+<text x="20" y="170" fill="#475569">Tỉ lệ 36 864 / 576 = 64 = g. Đó là lý do MobileNet nhẹ.</text>
+</svg>
+<figcaption>Hình 2. Vì sao chia nhóm giảm tham số đúng g lần.</figcaption>
+</figure>
+
+<h3>2.3 Trường tiếp nhận: vì sao xếp chồng 3 × 3 lại đủ</h3>
+<blockquote><p>Hai lớp 3 × 3 nối nhau nhìn được một vùng 5 × 5 của ảnh gốc; ba lớp nhìn được 7 × 7. Mà tham số thì rẻ hơn: ba lớp 3 × 3 với C kênh tốn 3 · 9C<sup>2</sup> = 27C<sup>2</sup>, còn một lớp 7 × 7 tốn 49C<sup>2</sup>.</p><p>Cùng trường tiếp nhận, ít hơn 45% tham số, và có thêm hai lần phi tuyến. Đó là lý do gần như mọi kiến trúc sau năm 2014 chỉ dùng 3 × 3.</p></blockquote>
+<div class="n"><b>🧠 Ẩn dụ:</b> Một người đứng gần chỉ nhìn được cửa sổ nhỏ 3×3. Nhưng nếu người đó hỏi ba người đứng cạnh, mỗi người cũng nhìn cửa sổ 3×3 lệch nhau một ô, thì cả nhóm "thấy" vùng 5×5. Xếp thêm một tầng người nữa là 7×7: cùng tầm nhìn với một người cầm kính lúp 7×7, mà tốn ít "nét khắc" hơn và còn được suy nghĩ (phi tuyến) thêm hai lần.</div>
+<div class="t"><b>🔬 Kiểm chứng bằng công thức R<sub>ℓ</sub> (stride 1):</b> R<sub>0</sub>=1; lớp 1: 1+2 = 3; lớp 2: 3+2 = 5; lớp 3: 5+2 = 7 ✓. Tham số: 27C<sup>2</sup>/49C<sup>2</sup> ≈ 0,551, tức ít hơn ≈ 44,9% ≈ 45% ✓. Hai lần phi tuyến thêm: giữa ba lớp có hai hàm kích hoạt (ReLU) xen vào.</div>
+
+<figure>
+<svg viewBox="0 0 640 170" xmlns="http://www.w3.org/2000/svg" font-family="Arial" font-size="13">
+<text x="10" y="18" font-weight="bold">Trường tiếp nhận của các lớp 3×3 xếp chồng (stride 1)</text>
+<rect x="30" y="50" width="30" height="30" fill="#16a34a" fill-opacity=".6" stroke="#16a34a"/>
+<text x="20" y="100">1 ô (lớp ra)</text>
+<rect x="150" y="35" width="90" height="90" fill="#2563eb" fill-opacity=".25" stroke="#2563eb"/>
+<text x="145" y="142">R = 3 (1 lớp)</text>
+<rect x="290" y="25" width="150" height="110" fill="#ea580c" fill-opacity=".2" stroke="#ea580c"/>
+<text x="305" y="152">R = 5 (2 lớp)</text>
+<rect x="470" y="20" width="150" height="120" fill="#7c3aed" fill-opacity=".15" stroke="#7c3aed"/>
+<text x="495" y="158">R = 7 (3 lớp)</text>
+</svg>
+<figcaption>Hình 3. Mỗi lớp 3×3 thêm 2 vào trường tiếp nhận (nếu stride = 1). Kích thước vẽ minh hoạ, không theo tỉ lệ đúng.</figcaption>
+</figure>
+
+<h2>3. Bài tập mẫu: làm lại câu 43 đề 2025</h2>
+<blockquote><p><b>Đề.</b> Khối block 4-2 của ResNet-18 nhận đầu vào 512 × 7 × 7. Nó có bao nhiêu tham số, và tốn bao nhiêu FLOPs?</p>
+<p><b>Bước 1, khối ấy gồm gì.</b> Hai lớp tích chập 3 × 3 với 512 kênh vào và 512 kênh ra, mỗi lớp theo sau là một BatchNorm, không có bias trong conv vì BatchNorm đã có tham số dịch riêng.</p>
+<p><b>Bước 2, tham số.</b><br>512 · 512 · 3 · 3 = 2 359 296 cho mỗi conv, 2 × 2 359 296 = 4 718 592.<br>Hai BatchNorm thêm 4 × 512 = 2048, nên cả khối là 4 720 640.</p>
+<p><b>Bước 3, MACs và FLOPs.</b> Đầu ra vẫn là 7 × 7 vì s = 1 và p = 1:<br>2 359 296 × 49 = 115 605 504 MAC mỗi conv, 2 × 115 605 504 = 231 211 008 MAC cả khối,<br>FLOPs ≈ 2 × 231 211 008 = 462 422 016.</p></blockquote>
+<div class="n"><b>🧠 Bản chất:</b> Bài này là "lắp ghép" của hai khối Lego đã học: trọng số (con dấu) rồi nhân với số lần đóng dấu (7×7 = 49). BatchNorm chỉ là hai con số nhỏ (nhân và dịch) cho mỗi kênh.</div>
+<div class="t"><b>🔬 Từng bước:</b>
+<ul>
+<li>Vì sao 4 × 512? Mỗi kênh có 2 tham số học được (γ nhân, β dịch), hai BatchNorm → 2 · 2 · 512 = 2048. (Các thống kê chạy running mean/var là buffer, không tính vào tham số.)</li>
+<li>Kích thước: ⌊(7+2−2−1)/1⌋+1 = 7 ✓, nên số ô ra = 49.</li>
+<li>FLOPs xấp xỉ 4,6 × 10<sup>8</sup> ≈ 0,46 GFLOPs.</li>
+<li>Đáp số: <b>4 720 640 tham số</b> (4 718 592 nếu chỉ đếm conv), <b>462 422 016 FLOPs</b>.</li>
+</ul></div>
+
+<h3>Đối chiếu với chính ResNet-18 thật</h3>
+<blockquote><p>Chế độ --kiem của bộ bài tập dựng ResNet-18 thật bằng resnet18(weights=None), rồi đếm p.numel() của layer4[1]. Nó trả về 4 720 640, khớp từng chữ số với phép tính tay ở trên, và 4 718 592 nếu chỉ đếm hai conv.</p><p>Chú ý weights=None: dựng kiến trúc thì không tải gì từ mạng, nên việc này hợp lệ cả trong phòng thi. Còn tải trọng số đã huấn luyện thì không.</p></blockquote>
+<div class="t"><b>🔬 Mẫu code đếm tham số (minh hoạ, cùng ý với script của thầy):</b>
+<pre># %%
+from torchvision.models import resnet18
+m = resnet18(weights=None)          # chỉ dựng kiến trúc, không tải gì
+print(sum(p.numel() for p in m.layer4[1].parameters()))   # 4720640</pre>
+<b>🧠</b> Đây là "máy tính đối chứng": công thức tay và thư viện là hai đường độc lập, nếu khớp thì đáp án đáng tin.</div>
+
+<h3>BatchNorm chiếm 0,043% tham số và gần như không tốn FLOPs, nhưng bỏ nó thì mạng khó huấn luyện</h3>
+<blockquote><p>Đây là một trong những chỗ mà đếm tham số dễ làm người ta hiểu sai. Cột số của BatchNorm bé tới mức vô hình, nhưng nó là thứ giữ cho phân bố đầu vào mỗi lớp không trôi, và bỏ đi thì mạng sâu gần như không hội tụ.</p><p>Bài học chung: số tham số đo kích thước, không đo tầm quan trọng. Buổi 08 đã gặp đúng loại nhầm lẫn ấy với độ quan trọng đặc trưng.</p></blockquote>
+<div class="n"><b>🧠 Ẩn dụ:</b> BatchNorm như người điều tiết nhiệt độ phòng: nhỏ gọn, rẻ tiền, nhưng thiếu nó thì cả toà nhà (mạng sâu) không ở được. Cân nặng của một bộ phận không nói lên vai trò của nó.</div>
+<div class="t"><b>🔬 Kiểm tra:</b> 2048 / 4 720 640 ≈ 0,0434% ✓. Về FLOPs, BatchNorm chỉ là phép nhân-cộng theo từng phần tử (cỡ 512·49 mỗi lớp), nhỏ hơn conv hàng nghìn lần.</div>
+
+<h2>4. Bài tập tự làm</h2>
+<h3>Bài tập 1. Hai mươi bài tính tay</h3>
+<blockquote><pre># python bai-tap-conv.py # de bai
+# python bai-tap-conv.py --dap-an # dap an, co viet ra phep tinh
+# python bai-tap-conv.py --kiem # kiem chinh dap an bang torch</pre>
+<p>Năm lớp, mỗi lớp bốn câu: kích thước ra, tham số, MACs, FLOPs.</p>
+<div class="box"><b>Cổng kiểm</b><br>Làm hết trong 20 phút, không máy tính, rồi mới mở đáp án. Lệch một bài là chưa qua.<br>Chế độ --kiem không chấm bài bạn mà chấm đáp án của tôi: nó dựng lớp thật bằng torch, đẩy một tensor qua để đọc kích thước ra, và đếm tham số bằng p.numel(). Công thức và thư viện là hai đường tính độc lập, nên nếu tôi nhớ nhầm công thức thì cổng sẽ kêu chứ không im lặng đồng ý.</div></blockquote>
+<div class="n"><b>🧠 Mẹo:</b> Năm lớp A–E ở mục 2.2 là bài mẫu đã có đáp án; với 20 bài của thầy, hãy làm theo thứ tự: (1) kích thước ra, (2) trọng số, (3) MACs = (2) × số ô ra, (4) FLOPs = 2 × (3). Chỉ một chuỗi bốn bước.</div>
+
+<h3>Bài tập 2. Bảng công thức của riêng bạn</h3>
+<blockquote><p>Chép lại bảng ở mục 2.1 bằng tay lên một trang giấy, thêm cột ví dụ nhỏ nhất cho từng dòng.</p><div class="box"><b>Cổng kiểm</b><br>Không nhìn tài liệu, viết lại đủ sáu dòng. Rồi tự ra cho mình một lớp bất kỳ và tính cả bốn đại lượng trong ba phút.</div></blockquote>
+<div class="t"><b>🔬 Gợi ý "ví dụ nhỏ nhất":</b> ảnh 5×5, k=3, p=0, s=1 → ra 3×3; 1 kênh vào, 1 kênh ra → 9 tham số, 9·9 = 81 MACs, 162 FLOPs. Ví dụ nhỏ để kiểm công thức nhanh trong phòng thi.</div>
+
+<h3>Bài tập 3. Đổi một tham số, đoán trước rồi mới tính</h3>
+<blockquote><p>Lấy lớp C. Lần lượt: tăng k từ 5 lên 7; đổi p từ 0 sang 2; đổi s từ 1 sang 2. Trước mỗi lần, đoán kích thước ra và MACs sẽ đổi theo hướng nào, rồi mới tính.</p><div class="box"><b>Cổng kiểm</b><br>Ghi lại số lần bạn đoán sai hướng. Nếu sai từ hai lần trở lên thì bạn chưa thuộc công thức, chỉ đang thay số vào nó.</div></blockquote>
+<div class="t"><b>🔬 Đáp án để tự đối chiếu (lớp C: 32→64, vào 16²):</b>
+<ul>
+<li><b>k: 5 → 7:</b> ra = 16−6 = 10 (giảm); tham số 64·32·49 = 100 352 (+bias 64 = 100 416, tăng); MACs = 100 352 · 100 = 10 035 200 (tăng, vì tham số tăng gấp 1,96 lần còn số ô ra giảm).</li>
+<li><b>p: 0 → 2:</b> ra = ⌊(16+4−4−1)/1⌋+1 = 16 (tăng); tham số không đổi; MACs = 51 200 · 256 = 13 107 200 (tăng).</li>
+<li><b>s: 1 → 2:</b> ra = ⌊(16−4−1)/2⌋+1 = 6 (giảm); tham số không đổi; MACs = 51 200 · 36 = 1 843 200 (giảm).</li>
+</ul>
+<b>🧠</b> Quy tắc đoán hướng: k lớn → ảnh ra nhỏ đi, tham số tăng; p lớn → ảnh ra to hơn; s lớn → ảnh ra nhỏ đi, MACs giảm mà tham số giữ nguyên.</div>
+
+<h3>Bài tập 4. Đếm cả một mạng</h3>
+<blockquote><p>Dựng một CNN nhỏ cho ảnh 32 × 32 × 3: ba khối conv tăng dần kênh, mỗi khối theo sau một max pooling, rồi một lớp tuyến tính ra 10 lớp. Tính tay tổng tham số và tổng FLOPs, rồi đếm lại bằng torch.</p><div class="box"><b>Cổng kiểm</b><br>Hai con số khớp nhau. Rồi trả lời: phần lớn tham số nằm ở đâu, và phần lớn FLOPs nằm ở đâu? Hai câu trả lời ấy thường không cùng một chỗ, và biết điều đó là biết chỗ cần tối ưu.</div></blockquote>
+<div class="n"><b>🧠 Gợi ý nguyên lý:</b> Ở các lớp đầu, ảnh to nên số lần đóng dấu lớn, tức <i>FLOPs nhiều, tham số ít</i>. Ở các lớp cuối, ảnh đã nhỏ nhưng kênh nhiều, tức <i>tham số nhiều, FLOPs ít hơn</i>. Quy luật này thường xuất hiện; hãy tự kiểm lại bằng mạng của bạn.</div>
+<div class="t"><b>🔬 Khung tính (ví dụ kênh 3→16→32→64, k=3, p=1, pool 2×2, ra 10):</b>
+<pre># %%
+import torch, torch.nn as nn
+net = nn.Sequential(
+    nn.Conv2d(3, 16, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+    nn.Conv2d(16, 32, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+    nn.Conv2d(32, 64, 3, padding=1), nn.ReLU(), nn.MaxPool2d(2),
+    nn.Flatten(), nn.Linear(64*4*4, 10))
+print(sum(p.numel() for p in net.parameters()))</pre>
+Sau 3 lần pool: 32→16→8→4, nên đầu vào lớp tuyến tính có 64·4·4 = 1024 đặc trưng. Hãy tự tính tay rồi so với con số in ra (mạng này chỉ là ví dụ khung; bạn có thể chọn kênh khác).</div>
+
+<h3>Bài tập 5. Trường tiếp nhận của mạng bạn vừa dựng</h3>
+<blockquote><p>Dùng công thức ở mục 2.1 tính trường tiếp nhận của lớp conv cuối cùng.</p><div class="box"><b>Cổng kiểm</b><br>So với kích thước ảnh 32 × 32. Nếu trường tiếp nhận nhỏ hơn ảnh nhiều thì lớp cuối chưa bao giờ nhìn thấy toàn cảnh, và đó là một quyết định kiến trúc chứ không phải một lỗi.</div></blockquote>
+<div class="t"><b>🔬 Ví dụ với mạng khung ở trên:</b> conv1 (k=3): R=3; pool (k=2, s=2): R = 3 + 1·1 = 4; conv2: R = 4 + 2·2 = 8; pool: R = 8 + 1·2 = 10; conv3: R = 10 + 2·4 = 18. Trường tiếp nhận 18 so với ảnh 32: lớp conv cuối nhìn khoảng một nửa mỗi chiều, chưa phủ toàn ảnh.<br><b>🧠</b> Muốn nhìn toàn cảnh thì thêm lớp, thêm stride hoặc dùng pooling toàn cục ở cuối.</div>
+
+<figure>
+<svg viewBox="0 0 640 150" xmlns="http://www.w3.org/2000/svg" font-family="Arial" font-size="12">
+<text x="10" y="16" font-weight="bold">Ảnh nhỏ dần, kênh nhiều dần (mạng khung ở Bài tập 4)</text>
+<rect x="20" y="40" width="80" height="80" fill="#dbeafe" stroke="#2563eb"/><text x="22" y="135">3×32×32</text>
+<rect x="150" y="50" width="70" height="70" fill="#dbeafe" stroke="#2563eb"/><text x="140" y="135">16×16×16 (sau pool)</text>
+<rect x="290" y="65" width="55" height="55" fill="#dbeafe" stroke="#2563eb"/><text x="275" y="135">32×8×8</text>
+<rect x="400" y="80" width="40" height="40" fill="#dbeafe" stroke="#2563eb"/><text x="385" y="135">64×4×4</text>
+<rect x="500" y="90" width="12" height="30" fill="#fed7aa" stroke="#ea580c"/><text x="470" y="135">Linear → 10</text>
+<text x="108" y="85" font-size="20">→</text><text x="235" y="90" font-size="20">→</text><text x="355" y="100" font-size="20">→</text><text x="455" y="105" font-size="20">→</text>
+</svg>
+<figcaption>Hình 4. Kích thước không gian giảm còn kênh tăng: FLOPs lớn ở đầu mạng, tham số lớn ở cuối mạng.</figcaption>
+</figure>
+
+<h3>Chuẩn bị cho buổi sau</h3>
+<blockquote><p>Buổi 17 huấn luyện CNN từ đầu trên CPU, kèm tăng cường ảnh và câu hỏi cái nào phá hỏng bài toán. Mang theo câu hỏi: lật ngang một mảnh ghép thì nhãn của nó còn đúng không?</p></blockquote>
+<div class="n"><b>🧠 Gợi ý suy nghĩ:</b> Lật ngang ảnh con mèo thì vẫn là con mèo; nhưng lật ngang chữ "b" thành "d" hoặc lật ảnh một mảnh ghép có hướng ý nghĩa thì nhãn có thể đổi. Phép tăng cường chỉ hợp lệ khi nó <i>giữ nguyên nhãn</i>.</div>
+
+<hr>
+<h2>Bảng tra nhanh (tóm lược công thức)</h2>
+<div class="box">
+<b>Quy trình 4 bước:</b> ① H<sub>ra</sub> = ⌊(H+2p−d(k−1)−1)/s⌋+1 → ② Tham số = C<sub>ra</sub>·(C<sub>vào</sub>/g)·k² (+C<sub>ra</sub> nếu bias) → ③ MACs = ② (phần trọng số) × H<sub>ra</sub>·W<sub>ra</sub> → ④ FLOPs ≈ 2 × MACs.<br>
+<b>Bẫy hay gặp:</b> quên g; quên rằng stride 2 chia 4 số ô ra; quên BatchNorm (4C cho cả khối hai BN, 2C mỗi BN); phân biệt có/không bias.
+</div>
+</body>
+</html>
